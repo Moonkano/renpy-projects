@@ -3,8 +3,15 @@
 # Declare characters used by this game. The color argument colorizes the
 # name of the character.
 
-define sol = Character("Sol")
 
+define sol = Character("Sol")
+default pet_plant = False
+default ate_plant = False
+default flirt_plant = False
+default ate_pot = False
+default ready = False
+default same_name = False
+define pov = Character("[povname]")
 
 # The game starts here.
 
@@ -44,33 +51,193 @@ label start:
         "There's a nameplate on it: plantus the plant."
         menu plant_interact:
             "What will you do to the plant?"
-
+            
             "Pet the plant":
                 "You petted the plant gently."
                 "You think you heard it purr?"
                 $ pet_plant = True
+                jump plant_interact
             "Eat the plant":
+                $ ate_plant = True
+                with fade
                 "...????"
                 "You stuffed the entire plant in your mouth."
-                $ ate_plant = True
+                jump plant_interact
             "Flirt with the plant": 
                 "You tell Plantus that you'd never leaf them for another."
                 "Plantus blushes!"
                 $ flirt_plant = True
+                jump plant_interact
+            "Eat the pot" if ate_plant:
+                with fade
+                "Within seconds, you have consumed the entire pot."
+                "Are you proud of yourself?"
+                $ ate_pot = True
+                jump choiceLoopLobby
         label after_plant:
             "You decide to leave the plant alone."
             jump choiceLoopLobby
     label front_desk:
         "You walk over to the front desk."
-        "There is a bell."
-        jump choiceLoopLobby
+        "There is a bell, and an odd looking man sitting behind the front desk.."
+        menu desk_interact:
+            "What will you do?"
+
+            "Ring the bell":
+                if ready:
+                    show sol happy
+                    sol "Are you ready to start experimenting and... whatever else it is that we do here?!"
+                    menu experiment:
+                        "Yes":
+                            jump before_hallways
+                        "No":
+                            show sol neutral
+                            "You tell him that you're not ready yet."
+                            "You walk away to continue your investigations."
+                            hide sol
+                            jump choiceLoopLobby
+                elif ate_pot:
+                    show sol neutral 
+                    sol "Hey, so uhm.. Before anything else..."
+                    show sol irritated
+                    sol "Did you eat. The plant. And its pot???"
+                    sol "Because, I, uhm. Saw you. Do that."
+                elif ate_plant:
+                    show sol neutral
+                    sol "Hey, so uhm...! Before anything else..."
+                    show sol irritated
+                    sol "Where did my plant go."
+                elif flirt_plant:
+                    show sol neutral
+                    sol "..."
+                    sol "Hey, so.. It's not really an official rule or anything, but."
+                    show sol irritated
+                    sol "Please don't flirt with the plants.."
+                elif pet_plant:
+                    show sol neutral
+                    sol "Hello. I see you met plantus."
+                    sol "Thank you for giving him some well deserved attention."
+                else:
+                    show sol neutral
+                    sol "Ah, hello."
+            "Steal the bell":
+                "You don't think twice. You grab the bell and stuff it into your pocket."
+                "The man behind the counter stares at you with a mix of disappointment and fear."
+                show sol surprised
+                sol "....(I really hope you're not our new hire..)"
+                hide sol
+                jump desk_interact
+            "Return": 
+                "The man sits up in his chair, just about to greet you."
+                "Unfortunately, you make a 180 degree turn and walk away before he can get a word in."
+                jump choiceLoopLobby
+    label after_desk_interact:
+        show sol neutral
+        sol "I assume you are here for the job? Although... I didn't get your name.."
+        python:
+            povname = renpy.input("What is your name?", length=32)
+            povname = povname.strip()
+
+            if not povname:
+                povname = "Researcher"
+            elif povname.lower() == "sol":
+                same_name = True
+
+        pov "You can call me [povname]."
+        if same_name:
+            show sol happy
+            sol "Ha...? I guess we have the same name..!"
+            menu rebel:
+                "There can only be one.":
+                    show sol surprised
+                    sol "What?"
+                    python:
+                        sol = renpy.input("Rename this man.", length=32)
+                        sol = sol.strip()
+
+                        if not sol:
+                            sol = "Sol"
+                    sol "NONONONONONO...."
+                    show sol irritated
+                    sol "And you've already done it..."
+                    sol "OK THEN. GREAT."
+                "Haha, yeah!!!":
+                    "This is going to get confusing."
+
+        sol "Hm, well... Nice to meet you, [povname]."
+        show sol neutral
+        sol "Now, we should begin testing."
+        menu proceed1:
+            "Okay":
+                jump before_hallways
+            "Hold on...":
+                pov "I still want to look around."
+                show sol neutral
+                sol "Ah, sure, sure. Come back here when you're ready."
+                $ ready = True
+                hide sol
+                jump choiceLoopLobby
+
     label chairs:
         "You see three chairs in the corner, ominously placed in a circle."
+        menu chair_options:
+            "What will you do?"
+
+            "Sit down in the shadowed chair.":
+                "You decide to sit down in the chair bathed in darkness."
+                "You feel like a true lone wolf."
+                "+1 AURA!"
+                "....Just kidding."
+                jump chair_options
+            "Kick over the chairs":
+                "You kick over the chairs in rebellion!"
+                with vpunch
+                "HELL YEAH!!!!"
+                "..."
+                "You quietly set them back up. The weight of your actions is too much!"
+                jump chair_options
+            "Take a chair.":
+                "You decide to take a seat."
+                "+1 Chair!"
+                "....It's too heavy to carry around with you."
+                "-1 Chair!"
+                jump chair_options
+            "Return":
+                jump choiceLoopLobby
         jump choiceLoopLobby
     label posters:
         "You see three posters."
         "One explains the rules of this place, one is a Hangin In There cat poster, and the third one has some strange man on it."
-        jump choiceLoopLobby
+        menu poster_interact:
+            "What will you do?"
+            "Examine Poster 1":
+                "It's a cat clinging on to some kind of horizontal pole. Text reads 'Hang' in there!' You feel rather inspired."
+                jump poster_interact
+            "Examine Poster 2":
+                "It's a list of the rules of this place."
+                "1. Don't sue us. 2. Ignore any problems that you run into. 3. Love the company! Buy our merch today!"
+                jump poster_interact
+            "Examine Poster 3":
+                "It's some strange man posed in the darkness with bold red text on the bottom of the poster reading 'YOUR SUPERIORS ARE WATCHING.'"
+                "You think it's kind of tacky."
+                jump poster_interact
+            "Return":
+                jump choiceLoopLobby
+
+    label before_hallways:
+        show sol happy 
+        sol "Well! Let's get going!"
+        "He motions for you to follow as he dashes away through the door."
+        "Reluctantly, you decide to follow him."
+        jump hallways
+        with fade
+
+    label hallways: 
+        scene hallways
+        "You enter into the hallways."
+        "It's rather dark (and maybe a little intimidating). Luckily, your guide seems to know his way around."
+        show sol neutral
+        sol "SO. It's your first day. I'm going to start you off with something easy."
 
     # This ends the game.
 
