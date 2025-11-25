@@ -5,12 +5,15 @@
 
 
 define sol = Character("Sol")
+default menuset = set()
 default pet_plant = False
 default ate_plant = False
 default flirt_plant = False
 default ate_pot = False
 default ready = False
 default same_name = False
+default stole_bell = False
+default door_rejected = False
 define pov = Character("[povname]")
 
 # The game starts here.
@@ -45,11 +48,15 @@ label start:
             jump chairs
         "The Posters":
             jump posters
+        "The Door":
+            jump door
     
     label plant:
         "You walk over to the plant and crouch beside it."
         "There's a nameplate on it: plantus the plant."
         menu plant_interact:
+
+            set menuset
             "What will you do to the plant?"
             
             "Pet the plant":
@@ -74,15 +81,42 @@ label start:
                 "Are you proud of yourself?"
                 $ ate_pot = True
                 jump choiceLoopLobby
+            "Return":
+                jump choiceLoopLobby
         label after_plant:
-            "You decide to leave the plant alone."
+            "You decide to leaf the plant alone."
             jump choiceLoopLobby
+    
+    label door:
+        if door_rejected:
+            "You try again to open the door, but are met with the same response as last time."
+            "Maybe if he were distracted..."
+            "Either way, you leave the door alone."
+            jump choiceLoopLobby
+        "You walk past the desk to the door. Your hand catches the doorknob, and you begin to turn the handle.."
+        show sol surprised
+        sol "UH, WAIT! wait wait wait wait-"
+        "The man behind the counter springs into action, stepping forward and pressing a hand against the door to stop you from opening it."
+        sol "You're, uhm. Not allowed back there. By yourself, anyway..."
+        show sol neutral
+        sol "Sorry."
+        "You are ushered away from the door."
+        hide sol
+        $ door_rejected = True
+        jump choiceLoopLobby
+
     label front_desk:
         "You walk over to the front desk."
         "There is a bell, and an odd looking man sitting behind the front desk.."
         menu desk_interact:
             "What will you do?"
-
+            set menuset
+            "Tell him you're ready to go" if ready:
+                if stole_bell:
+                    show sol irritated
+                    sol ".... really?"
+                    sol "Just... come with me."
+                jump before_hallways
             "Ring the bell":
                 if ready:
                     show sol happy
@@ -96,6 +130,13 @@ label start:
                             "You walk away to continue your investigations."
                             hide sol
                             jump choiceLoopLobby
+                elif stole_bell:
+                    "You take the bell out of your pocket and hold it up."
+                    "You slam your hand down onto it repeatedly, all the while making eye contact with him."
+                    show sol neutral
+                    sol "..."
+                    show sol irritated
+                    sol "...Hi"
                 elif ate_pot:
                     show sol neutral 
                     sol "Hey, so uhm.. Before anything else..."
@@ -123,10 +164,15 @@ label start:
             "Steal the bell":
                 "You don't think twice. You grab the bell and stuff it into your pocket."
                 "The man behind the counter stares at you with a mix of disappointment and fear."
-                show sol surprised
-                sol "....(I really hope you're not our new hire..)"
-                hide sol
-                jump desk_interact
+                if ready:
+                    show sol irritated
+                    sol "(Sigh.)"
+                else:
+                    show sol surprised
+                    sol "....(I really hope you're not our new hire..)"
+                    hide sol
+                    $ stole_bell = True
+                    jump desk_interact
             "Return": 
                 "The man sits up in his chair, just about to greet you."
                 "Unfortunately, you make a 180 degree turn and walk away before he can get a word in."
@@ -157,10 +203,17 @@ label start:
 
                         if not sol:
                             sol = "Sol"
-                    sol "NONONONONONO...."
-                    show sol irritated
-                    sol "And you've already done it..."
-                    sol "OK THEN. GREAT."
+                    if sol.lower() == "sol":
+                        sol "NONONONO-"
+                        show sol neutral
+                        sol "Oh, you didn't go through with it."
+                        show sol happy
+                        sol "Ha..! Great. Thank you."
+                    else:
+                        sol "NONONONONONO...."
+                        show sol irritated
+                        sol "And you've already done it..."
+                        sol "OK THEN. GREAT."
                 "Haha, yeah!!!":
                     "This is going to get confusing."
 
@@ -168,6 +221,7 @@ label start:
         show sol neutral
         sol "Now, we should begin testing."
         menu proceed1:
+            # add menu here to get to know character or to proceed
             "Okay":
                 jump before_hallways
             "Hold on...":
@@ -181,6 +235,7 @@ label start:
     label chairs:
         "You see three chairs in the corner, ominously placed in a circle."
         menu chair_options:
+            set menuset
             "What will you do?"
 
             "Sit down in the shadowed chair.":
@@ -209,17 +264,18 @@ label start:
         "You see three posters."
         "One explains the rules of this place, one is a Hangin In There cat poster, and the third one has some strange man on it."
         menu poster_interact:
+            set menuset
             "What will you do?"
             "Examine Poster 1":
-                "It's a cat clinging on to some kind of horizontal pole. Text reads 'Hang' in there!' You feel rather inspired."
-                jump poster_interact
-            "Examine Poster 2":
                 "It's a list of the rules of this place."
                 "1. Don't sue us. 2. Ignore any problems that you run into. 3. Love the company! Buy our merch today!"
                 jump poster_interact
+            "Examine Poster 2":
+                "It's a cat clinging on to some kind of horizontal pole. Text reads 'Hang' in there!' You feel rather inspired."
+                jump poster_interact
             "Examine Poster 3":
                 "It's some strange man posed in the darkness with bold red text on the bottom of the poster reading 'YOUR SUPERIORS ARE WATCHING.'"
-                "You think it's kind of tacky."
+                "..It's kind of tacky."
                 jump poster_interact
             "Return":
                 jump choiceLoopLobby
@@ -235,7 +291,7 @@ label start:
     label hallways: 
         scene hallways
         "You enter into the hallways."
-        "It's rather dark (and maybe a little intimidating). Luckily, your guide seems to know his way around."
+        "It's rather dark (and maybe a little intimidating). You get the feeling you don't want to be caught alone here."
         show sol neutral
         sol "SO. It's your first day. I'm going to start you off with something easy."
 
