@@ -14,6 +14,9 @@ default ready = False
 default same_name = False
 default stole_bell = False
 default door_rejected = False
+default distracted_idea = False
+default keycard = False
+default distracted = False
 define pov = Character("[povname]")
 
 # The game starts here.
@@ -88,10 +91,14 @@ label start:
             jump choiceLoopLobby
     
     label door:
-        if door_rejected:
+        if distracted:
+            "Quickly, you open the door and dash through while he is still distracted."
+            jump hallways2
+        elif door_rejected:
             "You try again to open the door, but are met with the same response as last time."
             "Maybe if he were distracted..."
             "Either way, you leave the door alone."
+            $ distracted_idea = True
             jump choiceLoopLobby
         "You walk past the desk to the door. Your hand catches the doorknob, and you begin to turn the handle.."
         show sol surprised
@@ -114,9 +121,11 @@ label start:
             "Tell him you're ready to go" if ready:
                 if stole_bell:
                     show sol irritated
-                    sol ".... really?"
+                    sol ".... Are you really going to keep the bell?"
                     sol "Just... come with me."
-                jump before_hallways
+                    jump before_hallways
+                else:
+                    jump before_hallways
             "Ring the bell":
                 if ready:
                     show sol happy
@@ -167,6 +176,9 @@ label start:
                 if ready:
                     show sol irritated
                     sol "(Sigh.)"
+                    hide sol
+                    $ stole_bell = True
+                    jump desk_interact
                 else:
                     show sol surprised
                     sol "....(I really hope you're not our new hire..)"
@@ -219,12 +231,84 @@ label start:
 
         sol "Hm, well... Nice to meet you, [povname]."
         show sol neutral
+        menu sol_interact:
+            set menuset
+            "He taps his fingers on the desk, glancing towards the door."
+
+            "Who are you?":
+                sol "Ah, I forgot to introduce myself! I am Sol, and I am an intern at this place."
+                sol "Usually you'd have someone better showing you around, but.. they're busy right now."
+                show sol happy
+                sol "Maybe you'll meet them later?"
+                jump sol_interact
+            "What is this place?":
+                sol "Oh!! Welcome to.... drumroll please... The Facility!"
+                sol "We store all kinds of anomalies here- Uhm, right- anomalies are.. dangerous creatures or objects."
+                show sol surprised
+                sol "OR NOT DANGEROUS! Not all of them are dangerous!"
+                show sol happy
+                sol "Anyway, we experiment on said anomalies here so that we can learn more about them- and keep them contained easier."
+                jump sol_interact
+            "What job am I here for?":
+                sol "I'm surprised that they didn't tell you before... Uhm, well, you're being hired as a researcher!"
+                sol "You'll be experimenting on anomalies, taking observations, and just.. you know, doing paperwork."
+                jump sol_interact
+            "What are you?":
+                sol "Rude."
+                jump sol_interact
+            "I'm leaving.":
+                sol "..."
+                show sol sad
+                sol "Uh- I'm sorry, really sorry, but you... can't leave."
+                sol "Part of the ahaha, well, secrecy thing.. of the facility."
+                show sol neutral
+                sol "I promise it isn't as bad as it seems. Maybe we can work something out later? I'll talk to someone."
+                jump sol_interact
+            "LOOK BEHIND YOU!" if distracted_idea:
+                "You shout and point behind him. He turns his back to you, shocked."
+                show sol surprised
+                sol "HUH!?"
+                menu keycard:
+
+                    "You see his keycard on his belt. Take it?"
+
+                    "Take it":
+                        "You take his keycard while he's distracted."
+                        $ keycard = True
+                        "He looks back towards you, confused."
+                        "You tell him it was just a prank"
+                        show sol neutral
+                        "...Ah.. Ha, got me good??? I guess."
+
+                        menu distract:
+                            "Distract Him":
+                                $ distracted = True
+                                "You tell him that you saw someone suspicious outside, muttering something about planning to break in."
+                                show sol surprised
+                                sol "What!? Wait right here, I have this handled."
+                                "He vaults over the desk and books it towards the door."
+                                hide sol
+                                "You walk away."
+                                jump choiceLoopLobby
+                            "Return the Keycard":
+                                $ keycard = False
+                                show sol surprised
+                                sol "How did you-"
+                                show sol sad
+                                sol "Nevermind, thank you for returning it to me. I won't let my guard down again."
+                    "Do not":
+                        "You decide not to take his keycard."
+                        "He looks back towards you, confused."
+                        "You tell him it was just a prank."
+                        show sol neutral
+                        "...Ah.. Ha, got me good??? I guess."
+                        jump sol_interact
         sol "Now, we should begin testing."
         menu proceed1:
             # add menu here to get to know character or to proceed
-            "Okay":
+            "Let's go":
                 jump before_hallways
-            "Hold on...":
+            "Not yet...":
                 pov "I still want to look around."
                 show sol neutral
                 sol "Ah, sure, sure. Come back here when you're ready."
@@ -281,7 +365,7 @@ label start:
                 jump choiceLoopLobby
 
     label before_hallways:
-        show sol happy 
+        show sol neutral 
         sol "Well! Let's get going!"
         "He motions for you to follow as he dashes away through the door."
         "Reluctantly, you decide to follow him."
@@ -294,6 +378,11 @@ label start:
         "It's rather dark (and maybe a little intimidating). You get the feeling you don't want to be caught alone here."
         show sol neutral
         sol "SO. It's your first day. I'm going to start you off with something easy."
+    
+    label hallways2:
+        scene hallways
+        "You enter the hallways alone."
+        "It's rather dark (and maybe a little intimidating), but you'll manage. You have a keycard, after all."
 
     # This ends the game.
 
