@@ -3,21 +3,49 @@
 # Declare characters used by this game. The color argument colorizes the
 # name of the character.
 
-
+# character defines
 define sol = Character("Sol")
+define pov = Character("[povname]")
+
+# event variables
 default menuset = set()
+#Plant events
 default pet_plant = False
 default ate_plant = False
 default flirt_plant = False
 default ate_pot = False
+# Desk Events
 default ready = False
-default same_name = False
 default stole_bell = False
 default door_rejected = False
 default distracted_idea = False
 default keycard = False
 default distracted = False
-define pov = Character("[povname]")
+# Poster Events
+default poster1_interact = False
+default poster2_interact = False
+default poster3_interact = False
+# Name Events
+default same_name = False
+default s_silly_name = False
+default s_banned_name = False
+default silly_name =False
+default banned_name =False
+# Combat events
+default defend = True
+# Filter Events
+default banned = ["fuck","shit","cunt","fucker","pussy","asshole","ass","asshole","fartface","piss",
+"idiot","vag","vagina","penis","faggot","nigga","nigger"]
+default silly = ["idiot","idiotface","fart","poo","pp","poop","pee","fartface","dummy","dumb","stupid","loser"]
+
+# Player stats
+default player_max_hp = 100
+default player_hp = player_max_hp
+
+# Enemy stats
+default enemy_max_hp = 50
+default enemy_hp = enemy_max_hp
+
 
 # The game starts here.
 
@@ -91,6 +119,9 @@ label start:
             jump choiceLoopLobby
     
     label door:
+        camera:
+            perspective True
+        
         if distracted:
             "Quickly, you open the door and dash through while he is still distracted."
             jump hallways2
@@ -200,6 +231,13 @@ label start:
                 povname = "Researcher"
             elif povname.lower() == "sol":
                 same_name = True
+            elif povname.lower() in banned:
+                s_banned_name = True
+                while povname.lower() in banned:
+                    povname = renpy.input("What is your name?", length=32)
+                    povname = povname.strip()
+            elif povname.lower() in silly:
+                s_silly_name = True
 
         pov "You can call me [povname]."
         if same_name:
@@ -215,7 +253,20 @@ label start:
 
                         if not sol:
                             sol = "Sol"
-                    if sol.lower() == "sol":
+                        elif sol.lower() in banned:
+                            banned_name = True
+                            sol = "Sol"
+                        elif sol.lower() in silly:
+                            silly_name = True
+                    if banned_name:
+                        show sol exasperated
+                        sol "NO!!! YOU WILL NOT BE CALLING ME THAT! NO. THANK. YOU.!!!"
+                        sol "ANYWAY.."
+                    elif silly_name:
+                        show sol irritated
+                        sol "Please. Don't call me that."
+                        "You decide to call him that anyway."
+                    elif sol.lower() == "sol":
                         sol "NONONONO-"
                         show sol neutral
                         sol "Oh, you didn't go through with it."
@@ -228,9 +279,19 @@ label start:
                         sol "OK THEN. GREAT."
                 "Haha, yeah!!!":
                     "This is going to get confusing."
-
-        sol "Hm, well... Nice to meet you, [povname]."
+        elif povname == "Researcher":
+            show sol neutral
+            sol "Ah.. Not going to tell me? That's fine."
+            sol "I'll just call you... Researcher!"
+            povname "..."
+            "You suppose you are fine with this name."
+        elif s_silly_name:
+            show sol irritated
+            sol "..."
+            sol "....OK! Sure. I guess I can call you that."
+        
         show sol neutral
+        sol "Hm, well... Nice to meet you, [povname]."
         menu sol_interact:
             set menuset
             "He taps his fingers on the desk, glancing towards the door."
@@ -254,7 +315,10 @@ label start:
                 sol "You'll be experimenting on anomalies, taking observations, and just.. you know, doing paperwork."
                 jump sol_interact
             "What are you?":
+                show sol irritated
                 sol "Rude."
+                show sol happy
+                sol "I'm just messing with you. Though, I am unsure myself... Sorry."
                 jump sol_interact
             "I'm leaving.":
                 sol "..."
@@ -264,6 +328,9 @@ label start:
                 show sol neutral
                 sol "I promise it isn't as bad as it seems. Maybe we can work something out later? I'll talk to someone."
                 jump sol_interact
+            "Let's begin work":
+                sol "Ah! Yes, we should..."
+                jump before_hallways
             "LOOK BEHIND YOU!" if distracted_idea:
                 "You shout and point behind him. He turns his back to you, shocked."
                 show sol surprised
@@ -348,18 +415,20 @@ label start:
         "You see three posters."
         "One explains the rules of this place, one is a Hangin In There cat poster, and the third one has some strange man on it."
         menu poster_interact:
-            set menuset
             "What will you do?"
-            "Examine Poster 1":
+            "Examine Poster 1" if not poster1_interact:
                 "It's a list of the rules of this place."
                 "1. Don't sue us. 2. Ignore any problems that you run into. 3. Love the company! Buy our merch today!"
+                $ poster1_interact = True
                 jump poster_interact
-            "Examine Poster 2":
+            "Examine Poster 2" if not poster2_interact:
                 "It's a cat clinging on to some kind of horizontal pole. Text reads 'Hang' in there!' You feel rather inspired."
+                $ poster2_interact = True
                 jump poster_interact
-            "Examine Poster 3":
+            "Examine Poster 3" if not poster3_interact:
                 "It's some strange man posed in the darkness with bold red text on the bottom of the poster reading 'YOUR SUPERIORS ARE WATCHING.'"
                 "..It's kind of tacky."
+                $ poster3_interact = True
                 jump poster_interact
             "Return":
                 jump choiceLoopLobby
@@ -378,11 +447,80 @@ label start:
         "It's rather dark (and maybe a little intimidating). You get the feeling you don't want to be caught alone here."
         show sol neutral
         sol "SO. It's your first day. I'm going to start you off with something easy."
+        "He scans the names stamped next to the doors as you two continue walking. He stops suddenly, and you nearly walk into him."
+        sol "...Like this one!"
+        "Pointing dramatically to the left, he scans his keycard and opens it."
+        sol "After you!!"
+        "You enter the room."
+        hide sol
+        jump anomaly1
     
     label hallways2:
         scene hallways
         "You enter the hallways alone."
         "It's rather dark (and maybe a little intimidating), but you'll manage. You have a keycard, after all."
+
+    label anomaly1:
+        scene anomaly1
+        "You step through the door and are met with static hanging heavy in the air. Your hair stands on end."
+        show sol happy
+        sol "Welcome to your first anomaly. Aren't you excited?"
+        "He walks in behind you. Despite his happy-go-lucky demeanor, you notice that he won't take his eyes off the anomaly."
+        menu anomaly1q:
+            sol "Do you have any questions?"
+            set menuset 
+
+            "What am I supposed to do?":
+                sol "..."
+                show sol surprised
+                sol "Anyway."
+                jump anomaly1q
+            "What does this anomaly do?":
+                show sol happy
+                sol "I'm so glad you asked. (Because I've spent the last two hours memorizing the file while I was waiting for you to show up..)"
+                sol "..."
+                jump anomaly1q
+            "Is this safe?":
+                show sol surprised
+                sol "Safe?"
+                show sol happy
+                sol "Yeah! I think so.. Nobody's ever been harmed by it. Does that reassure you?"
+                sol "Though... it is only ever active when you're alone. So.. You, uhm! Might have to do this one alone."
+                sol "BUT AGAIN! It is totally safe."
+                jump anomaly1q
+            "No":
+                sol "Great! Glad to hear it."
+                "He shoots fingerguns at you, does a little spin, then exits the room. You hear the door lock with a click!"
+                hide sol with moveoutright
+                "You are left alone with this anomaly."
+
+    label anomaly2:
+        scene anomaly2
+        while player_hp > 0:
+
+            menu:
+                # Player Turn
+                "Attack":
+                    $ enemy_hp -= 11
+                    "You strike at the enemy. Enemy HP: [enemy_hp]"
+                    if enemy_hp <= 0:
+                        "The enemy falls to the ground, wires sparking."
+                        "They glare at you as their body falls apart."
+                        jump combat_win
+                "Defend":
+                    $ defend = True
+                    "You grit your teeth and hold your arms in front of your face."
+            # Enemy Turn
+            if defend:
+                $ player_hp -= 6
+                "Wires slash and hack at your sides. You lost 6 HP! Remaining: [player_hp]"
+            else: 
+                $ player_hp -= 11
+                "Electricity strikes your temples. You lost 11 HP! Remaining: [player_hp]"
+
+    label combat_win:
+        scene anomaly2
+        "You won..."
 
     # This ends the game.
 
