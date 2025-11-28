@@ -39,12 +39,147 @@ default banned = ["fuck","shit","cunt","fucker","pussy","asshole","ass","asshole
 default silly = ["idiot","idiotface","fart","poo","pp","poop","pee","fartface","dummy","dumb","stupid","loser"]
 
 # Player stats
-default player_max_hp = 100
+default player_max_hp = 25
 default player_hp = player_max_hp
 
 # Enemy stats
 default enemy_max_hp = 50
 default enemy_hp = enemy_max_hp
+
+# Animations
+image sol idle:
+    "images/sol_idle1.png"
+    pause 0.25
+    "images/sol_idle2.png"
+    pause 0.25
+    "images/sol_idle3.png"
+    pause 0.25
+    "images/sol_idle4.png"
+    pause 0.25
+    "images/sol_idle5.png"
+    pause 0.25
+    repeat
+image sol attack:
+    "images/sol_attack1.png"
+    pause 0.25
+    "images/sol_attack2.png"
+    pause 0.25
+    "sol idle"
+image sol hurt: 
+    "images/sol_hurt1.png"
+    pause 0.5
+    "sol idle"
+image wires:
+    "images/anomalyfight1Wires.png"
+
+image anomaly1 idle:
+    "images/anomaly1_idle1.png"
+    pause 0.16
+    "images/anomaly1_idle2.png"
+    pause 0.16
+    "images/anomaly1_idle3.png"
+    pause 0.16
+    "images/anomaly1_idle4.png"
+    pause 0.16
+    "images/anomaly1_idle5.png"
+    pause 0.16
+    "images/anomaly1_idle6.png"
+    pause 0.16
+    repeat
+
+image anomaly1 attack:
+    "images/anomaly1_attack1.png"
+    pause 0.16
+    "images/anomaly1_attack2.png"
+    pause 0.16
+    "images/anomaly1_attack3.png"
+    pause 0.16
+    "images/anomaly1_attack4.png"
+    pause 0.16
+    "images/anomaly1_attack5.png"
+    pause 0.16
+    "images/anomaly1_attack6.png"
+    pause 0.16
+    "anomaly1 idle"
+
+#Camera positioning
+
+# number generator
+
+default d4 = 0
+default d6 = 0
+default d10 = 0
+default d20 = 0
+
+
+
+label sol_turn:
+
+    window auto hide
+    camera:
+        subpixel True matrixtransform ScaleMatrix(1.0, 1.0, 1.0)*OffsetMatrix(-99.0, 63.0, 18.0)*RotateMatrix(-18.0, 10.0, 0.0)*OffsetMatrix(0.0, -153.0, -315.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+        parallel:
+            xpos 0 zpos -90.0 
+            linear 1.04 xpos -63 zpos -350.0 
+        parallel:
+            rotate 0.0 
+            linear 0.02 rotate 0.0 
+            linear 0.02 rotate 0.0 
+            linear 1.00 rotate 0.0 
+    show anomaly1 idle:
+        subpixel True pos (1.25, 1.14) zpos 27.0 
+    show wall:
+        subpixel True xzoom 1.65 yzoom 75.0 
+    show floor:
+        subpixel True yzoom 1.64 matrixtransform ScaleMatrix(1.65, 1.65, 1.0)*OffsetMatrix(0.0, 0.0, 252.0)*RotateMatrix(90.0, 0.0, 0.0)*OffsetMatrix(54.0, 90.0, -198.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+    show sol idle:
+        subpixel True zoom 0.72 matrixtransform ScaleMatrix(1.0, 1.0, 1.0)*OffsetMatrix(-72.0, 0.0, 9.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+    show wires:
+        subpixel True zoom 1.31 matrixtransform ScaleMatrix(1.0, 1.0, 1.0)*OffsetMatrix(0.0, 270.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+    with Pause(1.14)
+    camera:
+        xpos -63 zpos -350.0 rotate 0.0 
+    window auto show
+    return
+label sol_fight:
+    
+    window auto hide
+    camera:
+        subpixel True xpos 468 zpos -656.0 rotate -18.0 xzoom 1.0 zoom 1.0 xrotate 18.0 yrotate 0.0 
+    show wall:
+        subpixel True xzoom 1.94 
+    show sol attack:
+        subpixel True zoom 0.75 
+        xpos 0.97 
+        ease2 0.43 xpos 0.4 
+    with Pause(0.53)
+    show sol attack:
+        xpos 0.4 
+    window auto show
+    return
+label anomaly1_fight:
+    
+    window auto hide
+    camera:
+        subpixel True pos (-333, -216) zpos -494.0 rotate 0.0 
+    show anomaly1 attack:
+        subpixel True zpos -27.0 
+        xpos 0.75 
+        linear 0.40 xpos 0.75 
+        easein 0.35 xpos 1.5 
+    with Pause(0.85)
+    show anomaly1 attack:
+        xpos 1.5 
+    window auto show
+    return
+
+# Random Number Generator
+label dice_roll:
+    $ d4 = renpy.random.randint(1, 4)
+    $ d6 = renpy.random.randint(1, 6)
+    $ d10 = renpy.random.randint(1, 10)
+    $ d20 = renpy.random.randint(1, 20)
+    return
 
 
 # The game starts here.
@@ -461,6 +596,8 @@ label start:
         "It's rather dark (and maybe a little intimidating), but you'll manage. You have a keycard, after all."
 
     label anomaly1:
+        camera:
+            perspective True
         scene anomaly1
         "You step through the door and are met with static hanging heavy in the air. Your hair stands on end."
         show sol happy
@@ -494,33 +631,106 @@ label start:
                 hide sol with moveoutright
                 "You are left alone with this anomaly."
 
-    label anomaly2:
-        scene anomaly2
-        while player_hp > 0:
+    label anomalyfight:
+        show screen hp_bars1v1
+        scene wall
+        show floor
+        show sol idle
+        show wires
+        show anomaly1 idle
+        camera: 
+            perspective True
 
+        while player_hp > 0:
+            call sol_turn
+            call dice_roll
             menu:
+                "Fight for your life!"
                 # Player Turn
-                "Attack":
-                    $ enemy_hp -= 11
-                    "You strike at the enemy. Enemy HP: [enemy_hp]"
+                "Light Attack":
+                    show sol attack
+                    call sol_fight
                     if enemy_hp <= 0:
                         "The enemy falls to the ground, wires sparking."
                         "They glare at you as their body falls apart."
                         jump combat_win
+                    elif d10 >= 8:
+                        $ player_attack_value = d4+d6
+                        $ enemy_hp -= player_attack_value
+                        "CRITICAL HIT."
+                    else: 
+                        $ enemy_hp -= d4
+                        "[d4] DAMAGE."
+                "Heavy attack":
+                    show sol attack
+                    call sol_fight
+                    if enemy_hp <= 0:
+                        "The enemy falls to the ground, wires sparking."
+                        "They glare at you as their body falls apart."
+                    if d10 >= 9:
+                        $ player_attack_value = (d6 + d4)*2
+                        $ enemy_hp -= player_attack_value
+                        "CRITICAL HIT."
+                    elif d10 >= 5:
+                        $ player_attack_value = d6 + 2
+                        $ enemy_hp -= player_attack_value
+                    else:
+                        "YOU MISS."
                 "Defend":
                     $ defend = True
                     "You grit your teeth and hold your arms in front of your face."
+            call dice_roll
             # Enemy Turn
             if defend:
-                $ player_hp -= 6
+                show sol hurt
+                show anomaly1 attack
+                call anomaly1_fight
+                $ player_hp -= d10/2
                 "Wires slash and hack at your sides. You lost 6 HP! Remaining: [player_hp]"
+                $ defend = False
             else: 
-                $ player_hp -= 11
-                "Electricity strikes your temples. You lost 11 HP! Remaining: [player_hp]"
+                show sol hurt
+                show anomaly1 attack
+                if d20 >= 19:
+                    call anomaly1_fight
+                    $ player_hp -= d10
+                    "Y0U'RE H1T."
+                elif d20 <=2:
+                    $ enemy_hp += d4
+                    if enemy_hp < enemy_max_hp:
+                        "THE WIRES BIND UP OLD WOUNDS."
+                    else:
+                        $enemy_hp = enemy_max_hp
+                        "THE ENEMY LOOKS GOOD AS NEW."
+                else:
+                    call anomaly1_fight
+                    $ player_hp -= d4
+                    "ELECTRICITY STRIKES YOUR TEMPLES."
 
     label combat_win:
         scene anomaly2
         "You won..."
+        
+    label combat_loose:
+        scene anomaly2
+        "You've lost."
+
+    screen hp_bars1v1:
+
+        vbox:
+            spacing 20
+            xalign 0.1
+            yalign 0.0
+            xmaximum 600
+            text "[povname]"
+            bar value player_hp range player_max_hp
+        vbox:
+            spacing 20
+            xalign 0.9
+            yalign 0.0
+            xmaximum 600
+            text "???"
+            bar value enemy_hp range enemy_max_hp
 
     # This ends the game.
 
