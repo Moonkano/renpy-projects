@@ -33,14 +33,21 @@ default silly_name =False
 default banned_name =False
 # Combat events
 default defend = True
+default player_current = 0
+default enemy_chosen = 0
 # Filter Events
 default banned = ["fuck","shit","cunt","fucker","pussy","asshole","ass","asshole","fartface","piss",
-"idiot","vag","vagina","penis","faggot","nigga","nigger"]
-default silly = ["idiot","idiotface","fart","poo","pp","poop","pee","fartface","dummy","dumb","stupid","loser"]
+"idiot","vag","vagina","penis","faggot","nigga","nigger", "bitch"]
+default silly = ["idiot","idiotface","fart","poo","pp","poop","pee","fartface","dummy","dumb","stupid","loser","gay","homophobic","yaoi"]
 
 # Player stats
 default player_max_hp = 25
 default player_hp = player_max_hp
+
+# researcher stats
+default player2_max_hp = 25
+default player2_hp = player2_max_hp
+default defend2 = False
 
 # Enemy stats
 default enemy_max_hp = 50
@@ -63,11 +70,11 @@ image sol attack:
     "images/sol_attack1.png"
     pause 0.25
     "images/sol_attack2.png"
-    pause 0.25
+    pause 0.5
     "sol idle"
 image sol hurt: 
     "images/sol_hurt1.png"
-    pause 0.5
+    pause 1
     "sol idle"
 image wires:
     "images/anomalyfight1Wires.png"
@@ -102,10 +109,38 @@ image anomaly1 attack:
     pause 0.16
     "anomaly1 idle"
 
+image researcher idle:
+    "images/researcher_idle1.png"
+    pause 0.3
+    "images/researcher_idle2.png"
+    pause 0.3
+    "images/researcher_idle3.png"
+    pause 0.3
+    "images/researcher_idle4.png"
+    pause 0.3
+    "images/researcher_idle5.png"
+    pause 0.3
+    repeat
+image researcher attack:
+    "images/researcher_attack1.png"
+    pause 0.25
+    "images/researcher_attack2.png"
+    pause 0.5
+    "researcher idle"
+
+image researcher hurt:
+    "images/researcher_hurt.png"
+    pause 0.75
+    "researcher idle" 
+image anomaly1 hurt:
+    "images/anomaly_hurt"
+    pause 0.75
+    "anomaly1 idle"
+
 #Camera positioning
 
 # number generator
-
+default d2 = 0
 default d4 = 0
 default d6 = 0
 default d10 = 0
@@ -134,9 +169,13 @@ label sol_turn:
         subpixel True yzoom 1.64 matrixtransform ScaleMatrix(1.65, 1.65, 1.0)*OffsetMatrix(0.0, 0.0, 252.0)*RotateMatrix(90.0, 0.0, 0.0)*OffsetMatrix(54.0, 90.0, -198.0)*OffsetMatrix(0.0, 0.0, 0.0) 
     show sol idle:
         subpixel True zoom 0.72 matrixtransform ScaleMatrix(1.0, 1.0, 1.0)*OffsetMatrix(-72.0, 0.0, 9.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+    show researcher idle:
+        subpixel True pos (0.45, 1.25) 
     show wires:
         subpixel True zoom 1.31 matrixtransform ScaleMatrix(1.0, 1.0, 1.0)*OffsetMatrix(0.0, 270.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0) 
     with Pause(1.14)
+
+
     camera:
         xpos -63 zpos -350.0 rotate 0.0 
     window auto show
@@ -161,7 +200,7 @@ label anomaly1_fight:
     
     window auto hide
     camera:
-        subpixel True pos (-333, -216) zpos -494.0 rotate 0.0 
+        subpixel True pos (-333, 45) zpos -494.0 rotate 0.0 
     show anomaly1 attack:
         subpixel True zpos -27.0 
         xpos 0.75 
@@ -171,10 +210,45 @@ label anomaly1_fight:
     show anomaly1 attack:
         xpos 1.5 
     window auto show
+    
+    return
+label anomaly1_fight2:
+
+
+    window auto hide
+    camera:
+        subpixel True pos (-126, 65) zpos -372.0 
+    show sol idle:
+        subpixel True xpos 0.5 zpos -171.0 
+    show anomaly1 attack:
+        subpixel True ypos 0.19 zpos -9.0 
+        xpos 0.79 
+        linear 0.27 xpos 0.79 
+        linear 0.34 xpos 1.7 
+    with Pause(0.71)
+    show anomaly1 attack:
+        pos (1.7, 0.19) 
+    window auto show
+    return
+
+
+
+label researcher_fight:
+    
+    window auto hide
+    camera:
+        subpixel True pos (477, 63) zpos -620.0 xrotate 0.0 
+    show researcher attack:
+        subpixel True zpos -225.0 
+        xpos 1.01 
+        linear 0.39 xpos 0.2
+    with Pause(0.49)
+    window auto show
     return
 
 # Random Number Generator
 label dice_roll:
+    $ d2 = renpy.random.randint(1, 2)
     $ d4 = renpy.random.randint(1, 4)
     $ d6 = renpy.random.randint(1, 6)
     $ d10 = renpy.random.randint(1, 10)
@@ -638,17 +712,66 @@ label start:
         show sol idle
         show wires
         show anomaly1 idle
+        show researcher idle
         camera: 
             perspective True
 
-        while player_hp > 0:
+        while player_hp > 0 and player2_hp > 0:
             call sol_turn
             call dice_roll
             menu:
-                "Fight for your life!"
-                # Player Turn
-                "Light Attack":
+
+                "It's your turn."
+
+
+                "Light Attack" if player2_hp > 0 and player_current == 0:
+                    show researcher attack
+                    if enemy_hp <= 0:
+                        "The enemy falls to the ground, wires sparking."
+                        "They glare at you as their body falls apart."
+                        jump combat_win
+                    elif d10 >= 8:
+                        call researcher_fight
+                        show anomaly1 hurt
+                        $ player_attack_value = d4+d6
+                        $ enemy_hp -= player_attack_value
+                        "CRITICAL HIT."
+                        $ player_current += 1
+                    else: 
+                        call researcher_fight
+                        $ enemy_hp -= d4
+                        "[d4] DAMAGE."
+                        $ player_current += 1
+                "Heavy attack" if player2_hp > 0 and player_current == 0:
+                    show researcher attack
+                    show anomaly1 hurt
+                    call researcher_fight
+                    if enemy_hp <= 0:
+                        "The enemy falls to the ground, wires sparking."
+                        "They glare at you as their body falls apart."
+                    if d10 >= 9:
+                        $ player_attack_value = (d6 + d4)*2
+                        $ enemy_hp -= player_attack_value
+                        $ player_current += 1
+                        "CRITICAL HIT."
+                    elif d10 >= 5:
+                        $ player_attack_value = d6 + 2
+                        $ enemy_hp -= player_attack_value
+                        $ player_current += 1
+                        "YOU HIT."
+                    else:
+                        "YOU MISS."
+                        $ player_current += 1
+                "Defend":
+                    $ defend = True
+                    "You grit your teeth and hold your arms in front of your face."
+                    $ player_current += 1
+                
+
+                # sol's turn
+                "Light Attack" if player_hp > 0 and player_current == 1:
                     show sol attack
+                    show anomaly1 hurt
                     call sol_fight
                     if enemy_hp <= 0:
                         "The enemy falls to the ground, wires sparking."
@@ -658,11 +781,14 @@ label start:
                         $ player_attack_value = d4+d6
                         $ enemy_hp -= player_attack_value
                         "CRITICAL HIT."
+                        $ player_current -=1
                     else: 
                         $ enemy_hp -= d4
                         "[d4] DAMAGE."
-                "Heavy attack":
+                        $ player_current -=1
+                "Heavy attack" if player_hp > 0 and player_current == 1:
                     show sol attack
+                    show anomaly1 hurt
                     call sol_fight
                     if enemy_hp <= 0:
                         "The enemy falls to the ground, wires sparking."
@@ -671,24 +797,32 @@ label start:
                         $ player_attack_value = (d6 + d4)*2
                         $ enemy_hp -= player_attack_value
                         "CRITICAL HIT."
+                        $ player_current -= 1
                     elif d10 >= 5:
                         $ player_attack_value = d6 + 2
                         $ enemy_hp -= player_attack_value
+                        "YOU HIT."
+                        $ player_current -= 1
                     else:
                         "YOU MISS."
-                "Defend":
-                    $ defend = True
-                    "You grit your teeth and hold your arms in front of your face."
+                        $ player_current -=1
+                "Defend" if player_hp > 0 and player_current == 1:
+                    $ defend2 = True
+                    "He grits his teeth and holds his hands up in front of his face."
+                    $ player_current -=1
             call dice_roll
             # Enemy Turn
-            if defend:
+
+            $ enemy_chosen = d2
+
+            if enemy_chosen == 1 and defend:
                 show sol hurt
                 show anomaly1 attack
                 call anomaly1_fight
                 $ player_hp -= d10/2
-                "Wires slash and hack at your sides. You lost 6 HP! Remaining: [player_hp]"
+                "Wires slash and hack at your sides."
                 $ defend = False
-            else: 
+            elif enemy_chosen == 1: 
                 show sol hurt
                 show anomaly1 attack
                 if d20 >= 19:
@@ -706,11 +840,36 @@ label start:
                     call anomaly1_fight
                     $ player_hp -= d4
                     "ELECTRICITY STRIKES YOUR TEMPLES."
+            elif enemy_chosen == 2 and defend:
+                show researcher hurt
+                show anomaly1 attack
+                call anomaly1_fight2
+                $ player_hp -=d10/2
+                "Wires lash at your sides."
+                $ defend = False
+            elif enemy_chosen == 2:
+                show researcher hurt
+                show anomaly1 attack
+                if d20 >= 19:
+                    call anomaly1_fight2
+                    $ player2_hp -= d10
+                    "Y0U'RE H1T."
+                elif d20 <=2:
+                    $ enemy_hp += d4
+                    if enemy_hp < enemy_max_hp:
+                        "THE WIRES BIND UP OLD WOUNDS."
+                    else:
+                        $enemy_hp = enemy_max_hp
+                        "THE ENEMY LOOKS GOOD AS NEW."
+                else:
+                    call anomaly1_fight2
+                    $ player2_hp -= d4
+                    "STATIC COURSES THROUGH YOUR VEINS."
 
     label combat_win:
         scene anomaly2
         "You won..."
-        
+
     label combat_loose:
         scene anomaly2
         "You've lost."
@@ -723,7 +882,7 @@ label start:
             yalign 0.0
             xmaximum 600
             text "[povname]"
-            bar value player_hp range player_max_hp
+            bar value player2_hp range player2_max_hp
         vbox:
             spacing 20
             xalign 0.9
@@ -731,6 +890,13 @@ label start:
             xmaximum 600
             text "???"
             bar value enemy_hp range enemy_max_hp
+        vbox:
+            spacing 20
+            xalign 0.1
+            yalign 0.1
+            xmaximum 600
+            text "[sol]"
+            bar value player_hp range player_max_hp
 
     # This ends the game.
 
