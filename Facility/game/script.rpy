@@ -39,12 +39,13 @@ default enemy_chosen = 0
 default i = 0
 # Filter Events
 default banned = ["fuck","shit","cunt","fucker","pussy","asshole","ass","asshole","fartface","piss",
-"idiot","vag","vagina","penis","faggot","nigga","nigger", "bitch"]
+"idiot","vag","vagina","penis","faggot","nigga","nigger", "bitch", "queef",""]
 default silly = ["idiot","idiotface","fart","poo","pp","poop","pee","fartface","dummy","dumb","stupid","loser","gay","homophobic","yaoi"]
 
 # Player stats
 default player_max_hp = 10
 default player_hp = player_max_hp
+default player_attack_value = 0
 
 # researcher stats
 default player2_max_hp = 15
@@ -54,6 +55,7 @@ default defend2 = False
 # Enemy stats
 default enemy_max_hp = 50
 default enemy_hp = enemy_max_hp
+default enemy_attack_value = 0
 
 # Animations
 image sol idle:
@@ -168,6 +170,50 @@ label sol_turn:
 
     return
 
+
+label researcher_turn:
+    camera:
+        subpixel True matrixtransform ScaleMatrix(1.0, 1.0, 1.0)*OffsetMatrix(0.0, 0.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 9.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+    show wall:
+        subpixel True matrixtransform ScaleMatrix(1.0, 2.28, 1.0)*OffsetMatrix(0.0, 0.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+    show floor:
+        subpixel True matrixtransform ScaleMatrix(1.81, 0.96, 3.04)*OffsetMatrix(0.0, 0.0, 0.0)*RotateMatrix(81.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+    show anomaly1 idle:
+        subpixel True matrixtransform ScaleMatrix(1.0, 1.0, 1.0)*OffsetMatrix(0.0, 0.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(1152.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+    show researcher idle:
+        subpixel True matrixtransform ScaleMatrix(1.0, 1.0, 1.0)*OffsetMatrix(0.0, 0.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(-225.0, 0.0, -171.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+    show sol idle:
+        subpixel True matrixtransform ScaleMatrix(1.0, 1.0, 1.0)*OffsetMatrix(0.0, 0.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(-2700.0, 0.0, -792.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+    return
+
+label researcher_down:
+    
+    show researcher idle:
+        subpixel True xpos -0.2 
+    show researcher_down:
+        subpixel True zoom 0.94 matrixtransform ScaleMatrix(1.0, 1.0, 1.0)*OffsetMatrix(0.0, 0.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(-126.0, 0.0, -108.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+    return
+label sol_down:
+    
+    show sol idle:
+        subpixel True matrixtransform ScaleMatrix(1.0, 1.0, 1.0)*OffsetMatrix(0.0, 0.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(-2358.0, 0.0, -792.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+    show sol_down:
+        subpixel True zoom 0.83 matrixtransform ScaleMatrix(1.0, 1.0, 1.0)*OffsetMatrix(0.0, 0.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(-135.0, 0.0, -702.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+    return
+label evil_sol:
+    
+    window auto hide
+    show sol neutral:
+        subpixel True 
+        matrixtransform ScaleMatrix(1.784313725490196, 1.0, 1.0)*OffsetMatrix(0.0, 0.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.19607843137254902, 0.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+        linear 0.50 matrixtransform ScaleMatrix(1.0, 1.0, 1.0)*OffsetMatrix(0.0, 0.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+        linear 2.04 matrixtransform ScaleMatrix(5.0, 1.0, 1.0)*OffsetMatrix(0.0, 0.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(-15.0, 1.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+    with Pause(2.64)
+    show sol neutral:
+        matrixtransform ScaleMatrix(5.0, 1.0, 1.0)*OffsetMatrix(0.0, 0.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(-15.0, 1.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+    window auto show
+
+    return
 label sol_fight:
 
     return
@@ -207,6 +253,7 @@ label start:
 
     scene lobby
     with fade
+    play music lounge loop
 
     # This shows a character sprite. A placeholder is used, but you can
     # replace it by adding a file named "eileen happy.png" to the images
@@ -365,7 +412,7 @@ label start:
                     $ stole_bell = True
                     jump desk_interact
                 else:
-                    show sol surprised
+                    show sol nervous
                     sol "....(I really hope you're not our new hire..)"
                     hide sol
                     $ stole_bell = True
@@ -474,7 +521,7 @@ label start:
                 jump sol_interact
             "I'm leaving.":
                 sol "..."
-                show sol sad
+                show sol nervous
                 sol "Uh- I'm sorry, really sorry, but you... can't leave."
                 sol "Part of the ahaha, well, secrecy thing.. of the facility."
                 show sol neutral
@@ -483,6 +530,10 @@ label start:
             "Let's begin work":
                 sol "Ah! Yes, we should..."
                 jump before_hallways
+            "Return":
+                show sol neutral
+                sol "Oh... Goodbye, then."
+                jump choiceLoopLobby
             "LOOK BEHIND YOU!" if distracted_idea:
                 "You shout and point behind him. He turns his back to you, shocked."
                 show sol surprised
@@ -594,6 +645,7 @@ label start:
         with fade
 
     label hallways: 
+        play music something_is_wrong loop
         scene hallways
         "You enter into the hallways."
         "It's rather dark (and maybe a little intimidating). You get the feeling you don't want to be caught alone here."
@@ -609,8 +661,21 @@ label start:
     
     label hallways2:
         scene hallways
+        play music something_is_wrong loop
         "You enter the hallways alone."
         "It's rather dark (and maybe a little intimidating), but you'll manage. You have a keycard, after all."
+        jump anomaly1_alone
+
+    label anomaly1_alone:
+        scene anomalyfake
+        "You enter the cell. There's a person standing ahead of you with a small smile on their face."
+        anomaly1 "Hello there. You ... are alone?"
+        menu alone:
+            "Yes":
+                pov "That's right."
+            "No":
+                pov "No, I'm not."
+        jump anomalyfight_alone
 
     label anomaly1:
         camera:
@@ -626,7 +691,7 @@ label start:
 
             "What am I supposed to do?":
                 sol "..."
-                show sol surprised
+                show sol nervous
                 sol "Anyway."
                 jump anomaly1q
             "What does this anomaly do?":
@@ -659,11 +724,133 @@ label start:
                 anomaly1 "The snake who has trapped you here. Sol, as he calls hims--elf."
                 anomaly1 "Aren't you angry? He trapped you here. Don't you have anyone to go back to?"
                 pov "..."
+                jump anomaly1Plea
             "How do I help you?":
-                anomaly1 "You must find "
-            "What do I get out of this?":
-                anomaly1 "SHUT UP"
+                anomaly1 "All you have to do.. Is change my channel to Channel 9999."
+                anomaly1 "1nnocent, right? Harmless, even. Then, I will be free."
+                menu channel:
+                    "What will you do?"
 
+                    "Change the channel":
+                        pov "...All right. Fine."
+                        "You grab onto the TV's knob and twist it all the way around until you hear a Click!"
+                        "Channel 9999. A recording begins to play. You hear an unknown voice speak through a muffled microphone."
+                        "LOOP 10: The day keeps restarting. I cannot figure out why this is--"
+                        "The channel cuts out, and the tv begins to shake!" with vpunch
+                    "Do not":
+                        pov "No thanks."
+                        "You step away from the anomaly and start to walk away."
+                        "Static roars from the screen behind you! Something is happening!"
+                "The door is flung open as your guide runs to protect you."
+                jump anomalyfight
+
+            "What do I get out of this?":
+                anomaly1 "I can make you powerful beyond your dreams, and I can get you out of here."
+                anomaly1 "...Isn't that all you want? Freedom? Or.... No, I know what you want."
+                anomaly1 "You want answers. Ha. Ha. Ha. I can give you those."
+                jump anomaly1Plea
+    label anomalyfight_alone:
+        play music electric_chair loop
+        show screen hp_bars1v1
+        scene wall
+        show floor
+        show wires
+        show anomaly1 idle
+        show researcher idle
+        $ player2_max_hp = 30
+        $ player2_hp = 30
+        camera: 
+            perspective True
+
+        while enemy_hp > 0 and (player2_hp > 0):
+            call researcher_turn
+            call dice_roll
+            while i < 1:
+                menu:
+                    # researcher turn
+                    "It's your turn."
+
+                    "Light Attack" if player2_hp > 0:
+                        show researcher attack
+                        if enemy_hp <= 0:
+                            "The enemy falls to the ground, wires sparking."
+                            "They glare at you as their body falls apart."
+                            jump combat_win
+                        elif d10 >= 8:
+                            call researcher_fight
+                            show anomaly1 hurt
+                            $ player_attack_value = d4+d6
+                            $ enemy_hp -= player_attack_value
+                            "CRITICAL HIT."
+                            $ i += 1
+                        else: 
+                            call researcher_fight
+                            $ enemy_hp -= d4
+                            "[d4] DAMAGE."
+                            $ i += 1
+                    "Heavy attack" if player2_hp > 0:
+                        show researcher attack
+                        show anomaly1 hurt
+                        call researcher_fight
+                        if enemy_hp <= 0:
+                            "The enemy falls to the ground, wires sparking."
+                            "They glare at you as their body falls apart."
+                            jump combat_win
+                        if d10 >= 9:
+                            $ player_attack_value = (d6 + d4)*2
+                            $ enemy_hp -= player_attack_value
+                            $ i += 1
+                            "CRITICAL HIT."
+                        elif d10 >= 5:
+                            $ player_attack_value = d6 + 2
+                            $ enemy_hp -= player_attack_value
+                            $ i += 1
+                            "YOU HIT."
+                        else:
+                            "YOU MISS."
+                            $ i += 1
+                    "Defend" if player2_hp > 0:
+                        $ defend = True
+                        "You grit your teeth and hold your arms in front of your face."
+                        $ i += 1
+            call dice_roll
+            # Enemy Turn
+
+            $ enemy_chosen = 2
+            if enemy_chosen == 2 and defend:
+                show researcher hurt
+                show anomaly1 attack
+                call anomaly1_fight2
+                $ player2_hp -=d10/2
+                "Wires lash at your sides."
+                $ defend = False
+                $ i = 0
+            elif enemy_chosen == 2:
+                show researcher hurt
+                show anomaly1 attack
+                if d20 >= 19:
+                    call anomaly1_fight2
+                    $ player2_hp -= d10
+                    "Y0U'RE H1T."
+                    $ i = 0
+                elif d20 <=2:
+                    $ enemy_hp += d4
+                    if enemy_hp < enemy_max_hp:
+                        "THE WIRES BIND UP OLD WOUNDS."
+                        $ i = 0
+                    else:
+                        $enemy_hp = enemy_max_hp
+                        "THE ENEMY LOOKS GOOD AS NEW."
+                        $ i = 0
+                else:
+                    call anomaly1_fight2
+                    $ player2_hp -= d4
+                    "STATIC COURSES THROUGH YOUR VEINS."
+                    $ i = 0
+    if enemy_hp <= 0:
+        jump combat_win
+    else:
+        jump combat_lose
 
 
     label anomalyfight:
@@ -683,9 +870,14 @@ label start:
             call dice_roll
             while i < 2:
                 if player2_hp <= 0:
+                    show researcher_down
+                    call researcher_down
                     $ player_current = 1
                     $ i = 1
-                elif player_hp <0:
+                elif player_hp <= 0:
+                    show researcher idle
+                    show sol_down
+                    call sol_down
                     $ player_current = 0
                     $ i = 1
                 menu:
@@ -704,13 +896,15 @@ label start:
                             $ player_attack_value = d4+d6
                             $ enemy_hp -= player_attack_value
                             "CRITICAL HIT."
-                            $ player_current += 1
+                            if player2_hp > 0:
+                                $ player_current += 1
                             $ i += 1
                         else: 
                             call researcher_fight
                             $ enemy_hp -= d4
                             "[d4] DAMAGE."
-                            $ player_current += 1
+                            if player2_hp > 0:
+                                $ player_current += 1
                             $ i += 1
                     "Heavy attack" if player2_hp > 0 and player_current == 0:
                         show researcher attack
@@ -723,23 +917,27 @@ label start:
                         if d10 >= 9:
                             $ player_attack_value = (d6 + d4)*2
                             $ enemy_hp -= player_attack_value
-                            $ player_current += 1
+                            if player2_hp > 0:
+                                $ player_current += 1
                             $ i += 1
                             "CRITICAL HIT."
                         elif d10 >= 5:
                             $ player_attack_value = d6 + 2
                             $ enemy_hp -= player_attack_value
-                            $ player_current += 1
+                            if player2_hp > 0:
+                                $ player_current += 1
                             $ i += 1
                             "YOU HIT."
                         else:
                             "YOU MISS."
-                            $ player_current += 1
+                            if player2_hp > 0:
+                                $ player_current += 1
                             $ i += 1
                     "Defend" if player2_hp > 0 and player_current == 0:
                         $ defend = True
                         "You grit your teeth and hold your arms in front of your face."
-                        $ player_current += 1
+                        if player2_hp > 0:
+                                $ player_current += 1
                         $ i += 1
                     
 
@@ -807,7 +1005,8 @@ label start:
                 show sol hurt
                 show anomaly1 attack
                 call anomaly1_fight
-                $ player_hp -= d10/2
+                $ enemy_attack_value = d10/2
+                $ player_hp -= enemy_attack_value
                 "Wires slash and hack at your sides."
                 $ i = 0
                 $ defend = False
@@ -871,10 +1070,12 @@ label start:
             scene anomaly2
             "You won..."
     else:
-        label combat_loose:
+        label combat_lose:
             hide screen hp_bars1v1
             scene anomaly2
+            play music get_up loop
             "You've lost."
+
 
     screen hp_bars1v1:
 
