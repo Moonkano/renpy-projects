@@ -1,12 +1,25 @@
-﻿# The script of the game goes in this file.
+﻿
+#quick time event 
+default timer_range = 0
+default timer_jump = 0
+default time = 0
 
-# Declare characters used by this game. The color argument colorizes the
-# name of the character.
+# minigame quick time event variables
+
+
+screen countdown:
+    timer 0.01 repeat True action If(time > 0, true=setVariable('time',time -0.01), false=[Hide('countdown'), Jump(timer_jump)])
+    # the timer will decrease if there is more time than zero, and if there is no time left, the timer will be hidden and failstate will be moved to.
+
+    bar value time range timer_range xalign 0.5 yalign 0.9 xmaximum 300 at alpha_dissolve
+    #this creates the timer bar! fades the bar in and out
+return
 
 # character defines
 define sol = Character("Sol")
 define pov = Character("[povname]")
 define anomaly1 = Character("???")
+define ash = Character("Ash Dweller")
 
 # event variables
 default menuset = set()
@@ -15,6 +28,7 @@ default pet_plant = False
 default ate_plant = False
 default flirt_plant = False
 default ate_pot = False
+default plantus = False
 # Desk Events
 default ready = False
 default stole_bell = False
@@ -39,7 +53,7 @@ default enemy_chosen = 0
 default i = 0
 # Filter Events
 default banned = ["fuck","shit","cunt","fucker","pussy","asshole","ass","asshole","fartface","piss",
-"idiot","vag","vagina","penis","faggot","nigga","nigger", "bitch", "queef",""]
+"idiot","vag","vagina","penis","faggot", "bitch", "queef","boobs","boob","breast","booby","boobies"]
 default silly = ["idiot","idiotface","fart","poo","pp","poop","pee","fartface","dummy","dumb","stupid","loser","gay","homophobic","yaoi"]
 
 # Player stats
@@ -170,6 +184,17 @@ label sol_turn:
 
     return
 
+label ash_interactcam:
+    
+    show ashclockin:
+        subpixel True zoom 2.03 matrixtransform ScaleMatrix(1.0, 1.0, 1.0)*OffsetMatrix(0.0, 216.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+        
+    show ashclockin:
+        subpixel True matrixtransform ScaleMatrix(1.0, 1.0, 1.0)*OffsetMatrix(0.0, -63.0, 0.0)*RotateMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0)*OffsetMatrix(0.0, 0.0, 0.0) 
+
+
+
+    return
 
 label researcher_turn:
     camera:
@@ -239,9 +264,65 @@ label dice_roll:
 
 label anomaly1_heal:
     return 
+# minigame quicktime setup/function
 
+# the parameters are as follows:
 
+# - amount of time given
+# - total amount of time
+# - timer decreasing interval
+# - the key input to hit in the quick time event
+# - the x alignment of the bar/box
+# - the y alignment of the bar/box
 
+label qte_setup(time_start, time_max, interval, trigger_key, x_align, y_align):
+
+    $ time_start = time_start
+    $ time_max = time_max
+    $ interval = interval
+    $ trigger_key = trigger_key
+    $ x_align = x_align
+    $ y_align = y_align
+
+    call screen qte_simple
+    #calls you to give an input
+
+    $ cont = _return
+    # 1 if key was hit in time, 0 if key was not
+    return
+screen qte_simple:
+    #key input for the qte
+
+    timer interval repeat True action If(time_start > 0.0, true=SetVariable('time_start',time_start-interval), false=[Return(0), Hide('qte_simple')])
+    # timer, using vairables from the qte setup
+    # false is the condition if the timer runs out
+    # so bascially if we have time left, reduce the timer, if not, you ran out of time and failed
+
+    key trigger_key action (Return(1))
+    # detects if you hit the key or not. if you did, it ends the qte event because it returned 1 not 0. 
+
+    #this is just the ui stuff from here on out.
+
+    vbox:
+        xalign x_align
+        yalign y_align
+        spacing 25
+
+        text trigger_key:
+            xalign 0.5
+            color "#fff"
+            size 36
+            #outlines [(2, #000000,0,0)]
+            # this text shows what key to press
+        
+        bar:
+            value time_start
+            range time_max
+            xalign 0.5
+            xmaximum 300
+            if time_start < (time_max * 0.25):
+                left_bar "#f00"
+                #once timer is less than 25%, bar turns red
 
 # The game starts here.
 
@@ -439,6 +520,8 @@ label start:
                     povname = povname.strip()
             elif povname.lower() in silly:
                 s_silly_name = True
+            elif povname.lower() == "plantus" and ate_plant:
+                plantus = True
 
         pov "You can call me [povname]."
         if same_name:
@@ -488,6 +571,11 @@ label start:
             show sol irritated
             sol "..."
             sol "....OK! Sure. I guess I can call you that."
+        elif plantus:
+            show sol neutral
+            sol "Did you... Name yourself after my beloved plant that you eat?"
+            show sol irritated
+            sol "WHAT IS WRONG WITH YOU???"
         
         show sol neutral
         sol "Hm, well... Nice to meet you, [povname]."
@@ -526,7 +614,9 @@ label start:
                 sol "Part of the ahaha, well, secrecy thing.. of the facility."
                 show sol neutral
                 sol "I promise it isn't as bad as it seems. Maybe we can work something out later? I'll talk to someone."
-                jump sol_interact
+                "You ignore him and turn around, walking away. You're leaving whether he likes it or not."
+                hide sol
+                jump ash_interact
             "Let's begin work":
                 sol "Ah! Yes, we should..."
                 jump before_hallways
@@ -586,6 +676,17 @@ label start:
                 hide sol
                 jump choiceLoopLobby
 
+    label ash_interact:
+        camera:
+            perspective True
+        show ash neutral
+        ash "Hey. You."
+        "The man materializes before you and blocks your way to the door."
+        hide ash neutral
+        call ash_interactcam
+        "You run away. (in fear.)"
+        scene lobby
+        jump sol_interact
     label chairs:
         "You see three chairs in the corner, ominously placed in a circle."
         menu chair_options:
@@ -673,8 +774,51 @@ label start:
         menu alone:
             "Yes":
                 pov "That's right."
+                "..."
+                "Oh, how lovely... and you're not a researcher, are you? Your face isn't registered as one."
+                "Well, you must have come here alone for a good reason, right?"
+                "What do you need from me, [povname]?"
+                menu reason1:
+                    "What do you need?"
+
+                    "Make me strong":
+                        "..."
+                    "I don't need anything from you":
+                        "...."
+                    "I thought this was the bathroom":
+                        "..."
             "No":
                 pov "No, I'm not."
+                "..."
+                "I see! Thank you for being honest with me."
+                "So, what are you doing here? Anomalies are dangerous, don't you know that?"
+                menu reason2:
+                    set menuset
+                    "Why are you here?"
+
+                    "Why are you here?":
+                        anomaly1 "Okay. I know this is hard for you, but I'm going to need you to use some context clues here, buddy."
+                        anomaly1 "I am in a CELL. In a glorified JAIL for anomalies."
+                        anomaly1 "..."
+                        anomaly1 "Yeah, I'm just here out on a nice stroll."
+                    "I want to escape":
+                        anomaly1 "So you put yourself in a cell?"
+                        "The static rumbles rythically, as though it is laughing."
+                        anomaly1 "I jest! You want my help, don't you?"
+                        anomaly1 "I can do just that! But you need to help me too."
+                        anomaly1 "{bt=5}It's only fair!{/bt}"
+                    "I chose to be here":
+                        anomaly1 "You... did? That's pretty stupid."
+                        anomaly1 "You must want something out of this place? What is it? Power? Knowledge? Helping others?"
+                        anomaly1 "Whatever it is... I think you're in over your head, buddy."
+                        anomaly1 "But, hey. I just love the crazy dreamer type! if you're here to ask for my help, I'll see what I can do."
+                    "I'm just curious":
+                        anomaly1 "Yeah? You out on a little tour with whoever you're with?"
+                        anomaly1 "I hope you're enjoying the view, sicko."
+                        "There's a rumbly, staticky laugh."
+                        anomaly1 "How interesting. But, you should know, you're on a leash as long as your need a guide."
+                        anomaly1 "Real exploration begs that you unbind your chains and go free, living in the thrill of danger."
+                        anomaly1 "Let me help you cut those chains, buddy. As a favor~"
         jump anomalyfight_alone
 
     label anomaly1:
@@ -690,14 +834,18 @@ label start:
             set menuset 
 
             "What am I supposed to do?":
-                sol "..."
+                sol "You only need to gather some research on this anomaly- it's a new one, so! we.. don't have much yet."
+                sol "Try asking it some questions. I think that's always a good way to learn more."
                 show sol nervous
-                sol "Anyway."
+                "..."
+                "Ok, yes, I know it's a TV and can't talk back, but you never know...!"
                 jump anomaly1q
             "What does this anomaly do?":
                 show sol happy
                 sol "I'm so glad you asked. (Because I've spent the last two hours memorizing the file while I was waiting for you to show up..)"
                 sol "..."
+                show sol nervous
+                sol "I... I forgot everything. Here, just take a look at the file... (sigh)."
                 jump anomaly1q
             "Is this safe?":
                 show sol surprised
@@ -735,7 +883,7 @@ label start:
                         pov "...All right. Fine."
                         "You grab onto the TV's knob and twist it all the way around until you hear a Click!"
                         "Channel 9999. A recording begins to play. You hear an unknown voice speak through a muffled microphone."
-                        "LOOP 10: The day keeps restarting. I cannot figure out why this is--"
+                        "{sc=10}LOOP 10: The day went as it always does. Continued efforts to prevent the loop have fail--{/sc}" 
                         "The channel cuts out, and the tv begins to shake!" with vpunch
                     "Do not":
                         pov "No thanks."
@@ -745,13 +893,15 @@ label start:
                 jump anomalyfight
 
             "What do I get out of this?":
-                anomaly1 "I can make you powerful beyond your dreams, and I can get you out of here."
-                anomaly1 "...Isn't that all you want? Freedom? Or.... No, I know what you want."
-                anomaly1 "You want answers. Ha. Ha. Ha. I can give you those."
+                anomaly1 "Selfish. I thought you were supposed to be an altruist, [povname]."
+                "You stare back at it with disgust. The static crackles rythmically in almost a laugh."
+                anomaly1 "No? Is my information that outdated..? Let me bring you a new reason, then."
+                anomaly1 "I can get both of us out of here. You can go back to your own life."
+                anomaly1 "{sc=2}Hell, I can even bring what you're missing back.{/sc}"
                 jump anomaly1Plea
     label anomalyfight_alone:
         play music electric_chair loop
-        show screen hp_bars1v1
+        show screen hp_bars2v1
         scene wall
         show floor
         show wires
@@ -855,7 +1005,7 @@ label start:
 
     label anomalyfight:
         play music electric_chair loop
-        show screen hp_bars1v1
+        show screen hp_bars2v1
         scene wall
         show floor
         show sol idle
@@ -1066,18 +1216,52 @@ label start:
                     $ i = 0
     if enemy_hp <= 0:
         label combat_win:
-            hide screen hp_bars1v1
+            hide screen hp_bars2v1
             scene anomaly2
             "You won..."
     else:
         label combat_lose:
-            hide screen hp_bars1v1
+            hide screen hp_bars2v1
             scene anomaly2
             play music get_up loop
             "You've lost."
+    #i want to add a quicktime event. not sure where yet
+    # at this point in time, this label is unreachable/uselss in game.
+    '''
+    label quicktime:
+
+        label qtmenu:
+            $ time = 3
+            $ timer_range = 3
+            $ timer_jump = 'quicktimefail1'
+            show screen countdown
+            
+            menu:
+                "...":
+                    "..."
+                    hide screen countdown
+                    # jump [insert something here]
+    label quicktimefail1:
+        scene anomaly1
+        "..."
+    '''
+
+    label quicktimemini:
+
+        $ cont = 0 #continue variable
+        $ arr_keys = ["q","w","e","r"] # list of keyboard inputs to select from
+
+        call qte_setup(0.5, 0.5, 0.01, renpy.random.choice(arr_keys), renpy.random.randint(1, 9) * 0.1, renpy.random.randint(1, 9) * 0.1)
+        #calls qte setup
+        #key is randomly selected, then random position is selected
+
+        while cont == 1 and counter < 10:
+            call qte_setup(0.5, 0.5, 0.01, renpy.random.choice(arr_keys), renpy.random.randint(1, 9)* 0.1, renpy.random.randint(1,9) * 0.1)
+            $ counter = counter + 1
+            # repeat until ya miss one
 
 
-    screen hp_bars1v1:
+    screen hp_bars2v1:
 
         vbox:
             spacing 20
@@ -1101,6 +1285,23 @@ label start:
             text "[sol]"
             bar value player_hp range player_max_hp
 
-    # This ends the game.
+
+    screen hp_bars1v1:
+
+        vbox:
+            spacing 20
+            xalign 0.1
+            yalign 0.0
+            xmaximum 600
+            text "[povname]"
+            bar value player2_hp range player2_max_hp
+        vbox:
+            spacing 20
+            xalign 0.9
+            yalign 0.0
+            xmaximum 600
+            text "???"
+            bar value enemy_hp range enemy_max_hp
+    
 
     return
