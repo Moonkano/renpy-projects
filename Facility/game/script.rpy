@@ -3,12 +3,21 @@
 default timer_range = 0
 default timer_jump = 0
 default time = 0
+default counter = 0
+default miss1 = False
+default miss2 = False
+default miss3 = False
 
 # minigame quick time event variables
-
+transform alpha_dissolve:
+    alpha 0.0
+    linear 0.5 alpha 0.5
+    on hide:
+        linear 0.5 alpha 0.0
+    # fades the bar in and out    
 
 screen countdown:
-    timer 0.01 repeat True action If(time > 0, true=setVariable('time',time -0.01), false=[Hide('countdown'), Jump(timer_jump)])
+    timer 0.01 repeat True action If(time > 0, true=SetVariable('time',time -0.01), false=[Hide('countdown'), Jump(timer_jump)])
     # the timer will decrease if there is more time than zero, and if there is no time left, the timer will be hidden and failstate will be moved to.
 
     bar value time range timer_range xalign 0.5 yalign 0.9 xmaximum 300 at alpha_dissolve
@@ -70,6 +79,13 @@ default defend2 = False
 default enemy_max_hp = 50
 default enemy_hp = enemy_max_hp
 default enemy_attack_value = 0
+
+#minigame event
+default rprogression1 = False
+default rprogression2 = False
+default rprogression3 = False
+default rprogression4 = False
+default rprogression5 = False
 
 # Animations
 image sol idle:
@@ -289,6 +305,14 @@ label qte_setup(time_start, time_max, interval, trigger_key, x_align, y_align):
 
     $ cont = _return
     # 1 if key was hit in time, 0 if key was not
+    if cont == 0 and miss2:
+        $ miss3 = True
+    elif cont == 0 and miss1:
+        $ miss2 = True
+        scene anomaly_qte3
+    elif cont == 0:
+        $ miss1 = True
+        scene anomaly_qte2
     return
 screen qte_simple:
     #key input for the qte
@@ -299,7 +323,7 @@ screen qte_simple:
     # so bascially if we have time left, reduce the timer, if not, you ran out of time and failed
 
     key trigger_key action (Return(1))
-    # detects if you hit the key or not. if you did, it ends the qte event because it returned 1 not 0. 
+    # detects if you hit the key or not. if you didnt hit a key, it ends the qte event because it returned 0 not 1. 
 
     #this is just the ui stuff from here on out.
 
@@ -308,10 +332,10 @@ screen qte_simple:
         yalign y_align
         spacing 25
 
-        text trigger_key:
+        text trigger_key.upper():
             xalign 0.5
-            color "#fff"
-            size 36
+            color "#b31c1c"
+            size 42
             #outlines [(2, #000000,0,0)]
             # this text shows what key to press
         
@@ -889,6 +913,7 @@ label start:
                         pov "No thanks."
                         "You step away from the anomaly and start to walk away."
                         "Static roars from the screen behind you! Something is happening!"
+                        jump quicktimemini
                 "The door is flung open as your guide runs to protect you."
                 jump anomalyfight
 
@@ -898,6 +923,13 @@ label start:
                 anomaly1 "No? Is my information that outdated..? Let me bring you a new reason, then."
                 anomaly1 "I can get both of us out of here. You can go back to your own life."
                 anomaly1 "{sc=2}Hell, I can even bring what you're missing back.{/sc}"
+                label rizz:
+                    menu:
+                        "rizz him up?"
+
+                        "hey, baby, are you a power source, cause you've got the kinda resistor I wanna deposit my load into ;)":
+                            "..."
+                            jump anomaly1_fight
                 jump anomaly1Plea
     label anomalyfight_alone:
         play music electric_chair loop
@@ -1227,6 +1259,9 @@ label start:
             "You've lost."
     #i want to add a quicktime event. not sure where yet
     # at this point in time, this label is unreachable/uselss in game.
+    # future me here
+    # found a use for this code for the other quick time event thing i went with
+    # it'll be a part of the minigame for the pacifist route
     '''
     label quicktime:
 
@@ -1240,27 +1275,242 @@ label start:
                 "...":
                     "..."
                     hide screen countdown
-                    # jump [insert something here]
+                    # jump (insert something here)
     label quicktimefail1:
         scene anomaly1
         "..."
     '''
 
     label quicktimemini:
-
+        scene anomaly_qte1
+        if miss1 == True:
+            scene anomalyqte2
+        if miss2 == True:
+            scene anomalyqte3
         $ cont = 0 #continue variable
         $ arr_keys = ["q","w","e","r"] # list of keyboard inputs to select from
 
-        call qte_setup(0.5, 0.5, 0.01, renpy.random.choice(arr_keys), renpy.random.randint(1, 9) * 0.1, renpy.random.randint(1, 9) * 0.1)
+        call qte_setup(0.8, 0.8, 0.01, renpy.random.choice(arr_keys), renpy.random.randint(1, 9) * 0.1, renpy.random.randint(1, 9) * 0.1)
         #calls qte setup
         #key is randomly selected, then random position is selected
 
-        while cont == 1 and counter < 10:
-            call qte_setup(0.5, 0.5, 0.01, renpy.random.choice(arr_keys), renpy.random.randint(1, 9)* 0.1, renpy.random.randint(1,9) * 0.1)
+        while miss3 == False and counter < 10:
+            call qte_setup(0.8, 0.8, 0.01, renpy.random.choice(arr_keys), renpy.random.randint(1, 9)* 0.1, renpy.random.randint(1,9) * 0.1)
             $ counter = counter + 1
             # repeat until ya miss one
+        if miss3 == False:
+            if rprogression1:
+                jump progression1
+            elif rprogression2:
+                jump progression2
+            elif rprogression3:
+                jump progression3
+            elif rprogression4:
+                jump progression4
+            elif rprogression5:
+                jump progression5
+            else:
+                jump anomaly_passive
+        elif miss3:
+            jump combat_lose
+    
+    # this label will be jumping a lot between itself and quicktimemini depending on how many times the player messes up
+    # i think i'll add some progression variables so it knows where to jump back
+    # the player having their progress constantly reset would break immersion and make them angry methinks
+    label anomaly_passive:
+        scene anomaly_qte1
+
+        "Prove your worth to me."
+        "I will tell you a story. You must fill in the blanks when I trail off."
+        "If you are wrong, you will suffer consequences. If you are correct, we may continue without issue."
+        "Are you ready?"
+        menu ready2:
+            "Yes":
+                "Then let us begin."
+                jump progression1
+            "No":
+                "Very well then. You may take a look at the file one more time."
+        label progression1:
+            $ time = 3
+            $ timer_range = 3
+            $ timer_jump = 'quicktimemini'
+
+            "The story begins in a snowy winterland, carefully crafted, of pristine design; a flowery decoration of the labyrinth that a woman had found herself in."
+            "Among the pretty lies, shallow beauty, and death that flowed from the glistening snow,"
+            "She felt…"
+            show screen countdown
+            menu mprogression1:
+                "Disgusted":
+                    hide screen countdown
+                    $ rprogression1 = True
+                    $ counter = 0
+                    $ miss1 = False
+                    $miss2 = False
+                    $miss3 = False
+                    jump progression2
+                "Saddened":
+                    hide screen countdown
+                    $ counter = 0
+                    $ miss1 = False
+                    $miss2 = False
+                    $miss3 = False
+                    "Wrong."
+                    jump quicktimemini
+                "Glad":
+                    $ counter = 0
+                    $ miss1 = False
+                    $miss2 = False
+                    $miss3 = False
+                    hide screen countdown
+                    "Wrong." 
+                    jump quicktimemini
 
 
+        label progression2:
+            "...Disgusted. She sought to free herself from this maze, whether impossible or not."
+            "The woman called out to the white coats and even the gods, and…"
+            $ time = 3
+            $ timer_range = 3
+            show screen countdown
+            menu mprogression2:
+
+                "The white coats responded":
+                    $ counter = 0
+                    $ miss1 = False
+                    $miss2 = False
+                    $miss3 = False
+                    hide screen countdown
+                    "Wrong."
+                    jump quicktimemini
+                "Nobody responded":
+                    $ rprogression2 = True
+                    $ counter = 0
+                    $ miss1 = False
+                    $miss2 = False
+                    $miss3 = False
+                    jump progression3
+                    hide screen countdown
+                "The gods responded":
+                    hide screen countdown
+                    $ counter = 0
+                    $ miss1 = False
+                    $miss2 = False
+                    $miss3 = False
+                    "Wrong."
+                    jump quicktimemini
+
+        label progression3:
+            "...Nobody responded. The sands of time continued their pour, and all remained the same for many years."
+            "Searching, searching, and searching, there appeared to be no answer to her call."
+            "So, she created her own, and she …."
+            $ time = 3
+            $ timer_range = 3
+            show screen countdown
+            menu mprogression3:
+
+                "Accepted her fate":
+                    $ counter = 0
+                    $ miss1 = False
+                    $miss2 = False
+                    $miss3 = False
+                    hide screen countdown
+                    "Wrong."
+                    jump quicktimemini
+                "Found her new form":
+                    $ counter = 0
+                    $ miss1 = False
+                    $miss2 = False
+                    $miss3 = False
+                    $ rprogression3 = True
+                    hide screen countdown
+                    jump progression4
+                "Sought vengeance":
+                    $ counter = 0
+                    $ miss1 = False
+                    $miss2 = False
+                    $miss3 = False
+                    hide screen countdown
+                    "Wrong."
+                    jump quicktimemini
+
+        label progression4:
+            "...Found new form. It started as metal hands, designed for greater precision even as age tore lines into one’s hands."
+            "Then, it was an artificial liver that gave out from years of mistreatment."
+            "Then, a metallic shell when age claimed what was left."
+            "When all that remained was the heart…."
+
+            $ time = 3
+            $ timer_range = 3
+            show screen countdown
+            menu mprogression4:
+
+                "It was incased, to protect it":
+                    $ counter = 0
+                    $ miss1 = False
+                    $miss2 = False
+                    $miss3 = False
+                    hide screen countdown
+                    "Wrong."
+                    jump quicktimemini
+                "It was left alone, to heal it":
+                    $ counter = 0
+                    $ miss1 = False
+                    $miss2 = False
+                    $miss3 = False
+                    hide screen countdown
+                    "Wrong."
+                    jump quicktimemini
+                "It was replaced, to perfect it":
+                    $ counter = 0
+                    $ miss1 = False
+                    $miss2 = False
+                    $miss3 = False
+                    $ rprogression4 = True
+                    hide screen countdown
+                    jump progression5
+
+
+        label progression5:
+            "... It was replaced, to perfect it. And, thus she found her perfect form and escaped the bounds of the labyrinth."
+            "What was left behind bore no importance, for she had her freedom."
+            "But soon enough, claws burrowed their way into her chest once more, and she was thrown into a cell."
+            "And when her jail fell, she fell with it. Down. Down. Down."
+            "And she never saw its newest model until she was well beyond repair."
+            "In the end, she… "
+            $ time = 3
+            $ timer_range = 3
+            show screen countdown
+            menu mprogression5:
+                "Will be free once more":
+                    $ rprogression5 = True
+                    $ counter = 0
+                    $ miss1 = False
+                    $miss2 = False
+                    $miss3 = False
+                    hide screen countdown
+                    jump after_anomaly_passive
+                "Was never free":
+                    $ counter = 0
+                    $ miss1 = False
+                    $miss2 = False
+                    $miss3 = False
+                    "Wrong."
+                    hide screen countdown
+                    jump quicktimemini
+                "Will never be free":
+                    $ counter = 0
+                    $ miss1 = False
+                    $miss2 = False
+                    $miss3 = False
+                    hide screen countdown
+                    "Wrong."
+                    jump quicktimemini
+    label after_anomaly_passive:
+        "Well done."
+
+
+    # self explanatory
+    # creates the hp bars for the 2v1 combat fight
     screen hp_bars2v1:
 
         vbox:
@@ -1285,7 +1535,7 @@ label start:
             text "[sol]"
             bar value player_hp range player_max_hp
 
-
+    #just an edited version of the 2v1 fight. it's just missing sol's bar.
     screen hp_bars1v1:
 
         vbox:
