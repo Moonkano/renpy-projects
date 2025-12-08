@@ -55,6 +55,7 @@ default s_silly_name = False
 default s_banned_name = False
 default silly_name =False
 default banned_name =False
+default plantus_alive_name = False
 # Combat events
 default defend = False
 default player_current = 0
@@ -64,6 +65,18 @@ default i = 0
 default banned = ["fuck","shit","cunt","fucker","pussy","asshole","ass","asshole","fartface","piss",
 "idiot","vag","vagina","penis","faggot", "bitch", "queef","boobs","boob","breast","booby","boobies"]
 default silly = ["idiot","idiotface","fart","poo","pp","poop","pee","fartface","dummy","dumb","stupid","loser","gay","homophobic","yaoi"]
+
+# sol interact events
+default name_learned = False
+default location_learned = False
+default job_learned = False
+default what_areyou = False
+default tried_leaving = False
+
+#chair interact events
+default sat_shadowed = False
+default took_seat = False
+default kicked_chairs = False
 
 # Player stats
 default player_max_hp = 10
@@ -349,8 +362,14 @@ screen qte_simple:
                 #once timer is less than 25%, bar turns red
 
 # The game starts here.
-
 label start:
+    scene researcher_intro with fade
+    "Your name is ****. You worked at **** ****** for three years until the sudden passing of *****."
+    "You were aimless until you were contacted by *****. A job opportunity that would change your life, he told you."
+    "You accepted because you had nothing to lose. And then everything went black."
+    scene researcher_intro2 with fade
+    "And now...."
+label afterstart:
 
     # Show a background. This uses a placeholder by default, but you can
     # add a file (named either "bg room.png" or "bg room.jpg") to the
@@ -366,20 +385,22 @@ label start:
 
     # These display lines of dialogue.
 
-    "You awake in an unfamiliar building with no recollection of how you got here or who you are."
-    "Is this some kind of lobby?"
-    "You're not sure."
+    "You have no idea where you are or what your name is."
+    "It looks like some kind of lobby, so it can't be too dangerous."
     "Looking around, you notice some places of interest: the plant by the front desk, the front desk, the chairs, and the posters."
     menu choiceLoopLobby: 
         "Where should you go first?"
 
         "the plant":
+            scene plantus_scene_bg
             jump plant
         "The Front Desk":
+            scene desk_bg
             jump front_desk
         "The Chairs":
             jump chairs
         "The Posters":
+            scene posters_scene_bg
             jump posters
         "The Door":
             jump door
@@ -399,9 +420,11 @@ label start:
                 jump plant_interact
             "Eat the plant":
                 $ ate_plant = True
+                scene plantus_eaten_bg
                 with fade
                 "...????"
                 "You stuffed the entire plant in your mouth."
+                scene lobby
                 jump plant_interact
             "Flirt with the plant" if ate_plant == False: 
                 "You tell Plantus that you'd never leaf them for another."
@@ -409,12 +432,15 @@ label start:
                 $ flirt_plant = True
                 jump plant_interact
             "Eat the pot" if ate_plant:
+                scene pot_eaten bg
                 with fade
                 "Within seconds, you have consumed the entire pot."
                 "Are you proud of yourself?"
                 $ ate_pot = True
+                scene lobby
                 jump choiceLoopLobby
             "Return":
+                scene lobby
                 jump choiceLoopLobby
         label after_plant:
             "You decide to leaf the plant alone."
@@ -422,11 +448,13 @@ label start:
                 "You leave the pot alone."
             elif ate_pot == True:
                 "You walk away from the mess you've caused."
+                scene lobby
             jump choiceLoopLobby
     
     label door:
         camera:
             perspective True
+        scene door_bg
         
         if distracted:
             "Quickly, you open the door and dash through while he is still distracted."
@@ -436,6 +464,7 @@ label start:
             "Maybe if he were distracted..."
             "Either way, you leave the door alone."
             $ distracted_idea = True
+            scene lobby
             jump choiceLoopLobby
         "You walk past the desk to the door. Your hand catches the doorknob, and you begin to turn the handle.."
         show sol surprised
@@ -447,6 +476,7 @@ label start:
         "You are ushered away from the door."
         hide sol
         $ door_rejected = True
+        scene lobby
         jump choiceLoopLobby
 
     label front_desk:
@@ -454,7 +484,6 @@ label start:
         "There is a bell, and an odd looking man sitting behind the front desk.."
         menu desk_interact:
             "What will you do?"
-            set menuset
             "Tell him you're ready to go" if ready:
                 if stole_bell:
                     show sol irritated
@@ -475,6 +504,7 @@ label start:
                             "You tell him that you're not ready yet."
                             "You walk away to continue your investigations."
                             hide sol
+                            scene lobby
                             jump choiceLoopLobby
                 elif stole_bell:
                     "You take the bell out of your pocket and hold it up."
@@ -507,7 +537,7 @@ label start:
                 else:
                     show sol neutral
                     sol "Ah, hello."
-            "Steal the bell":
+            "Steal the bell" if stole_bell == False:
                 "You don't think twice. You grab the bell and stuff it into your pocket."
                 "The man behind the counter stares at you with a mix of disappointment and fear."
                 if ready:
@@ -525,6 +555,7 @@ label start:
             "Return": 
                 "The man sits up in his chair, just about to greet you."
                 "Unfortunately, you make a 180 degree turn and walk away before he can get a word in."
+                scene lobby
                 jump choiceLoopLobby
     label after_desk_interact:
         show sol neutral
@@ -546,6 +577,8 @@ label start:
                 s_silly_name = True
             elif povname.lower() == "plantus" and ate_plant:
                 plantus = True
+            elif povname.lower() == "plantus":
+                plantus_alive_name = True
 
         pov "You can call me [povname]."
         if same_name:
@@ -580,6 +613,15 @@ label start:
                         sol "Oh, you didn't go through with it."
                         show sol happy
                         sol "Ha..! Great. Thank you."
+                    elif sol == "plantus" and ate_plant:
+                        sol "plantus? As- As in my pet plant that you ate? In front of me?"
+                        show sol surprised
+                        sol "......Are you saying that I'm NEXT???"
+                    elif sol = "plantus":
+                        show sol neutral
+                        sol "As in... My pet plant?"
+                        show sol happy
+                        sol "...OK? I guess."
                     else:
                         sol "NONONONONONO...."
                         show sol irritated
@@ -595,16 +637,19 @@ label start:
             show sol irritated
             sol "..."
             sol "....OK! Sure. I guess I can call you that."
-        elif plantus:
+        elif plantus and ate_plant:
             show sol neutral
             sol "Did you... Name yourself after my beloved plant that you eat?"
             show sol irritated
             sol "WHAT IS WRONG WITH YOU???"
+        elif plantus_alive_name:
+            show sol neutral
+            sol "...Ok. Plantus number 2. That's you. Got it."
         
         show sol neutral
         sol "Hm, well... Nice to meet you, [povname]."
+
         menu sol_interact:
-            set menuset
             "He taps his fingers on the desk, glancing towards the door."
 
             "Who are you?":
@@ -612,6 +657,7 @@ label start:
                 sol "Usually you'd have someone better showing you around, but.. they're busy right now."
                 show sol happy
                 sol "Maybe you'll meet them later?"
+                $ name_learned = True
                 jump sol_interact
             "What is this place?":
                 sol "Oh!! Welcome to.... drumroll please... The Facility!"
@@ -620,16 +666,19 @@ label start:
                 sol "OR NOT DANGEROUS! Not all of them are dangerous!"
                 show sol happy
                 sol "Anyway, we experiment on said anomalies here so that we can learn more about them- and keep them contained easier."
+                $ location_learned = True
                 jump sol_interact
             "What job am I here for?":
                 sol "I'm surprised that they didn't tell you before... Uhm, well, you're being hired as a researcher!"
                 sol "You'll be experimenting on anomalies, taking observations, and just.. you know, doing paperwork."
+                $ job_learned = True
                 jump sol_interact
             "What are you?":
                 show sol irritated
                 sol "Rude."
                 show sol happy
                 sol "I'm just messing with you. Though, I am unsure myself... Sorry."
+                $ what_areyou = True
                 jump sol_interact
             "I'm leaving.":
                 sol "..."
@@ -639,6 +688,7 @@ label start:
                 show sol neutral
                 sol "I promise it isn't as bad as it seems. Maybe we can work something out later? I'll talk to someone."
                 "You ignore him and turn around, walking away. You're leaving whether he likes it or not."
+                $ tried_leaving =  True
                 hide sol
                 jump ash_interact
             "Let's begin work":
@@ -712,31 +762,33 @@ label start:
         scene lobby
         jump sol_interact
     label chairs:
+        scene chair_bg
         "You see three chairs in the corner, ominously placed in a circle."
         menu chair_options:
-            set menuset
             "What will you do?"
 
-            "Sit down in the shadowed chair.":
+            "Sit down in the shadowed chair." if sat_shadowed == False:
                 "You decide to sit down in the chair bathed in darkness."
                 "You feel like a true lone wolf."
                 "+1 AURA!"
                 "....Just kidding."
+                $ sat_shadowed = True
                 jump chair_options
-            "Kick over the chairs":
+            "Kick over the chairs" if kicked_chairs == False:
                 "You kick over the chairs in rebellion!"
                 with vpunch
                 "HELL YEAH!!!!"
-                "..."
-                "You quietly set them back up. The weight of your actions is too much!"
+                $ kicked_chairs = True
                 jump chair_options
-            "Take a chair.":
+            "Take a chair." if took_seat == False:
                 "You decide to take a seat."
                 "+1 Chair!"
                 "....It's too heavy to carry around with you."
                 "-1 Chair!"
+                $ took_seat = True
                 jump chair_options
             "Return":
+                scene lobby
                 jump choiceLoopLobby
         jump choiceLoopLobby
     label posters:
@@ -746,19 +798,25 @@ label start:
             "What will you do?"
             "Examine Poster 1" if not poster1_interact:
                 "It's a list of the rules of this place."
-                "1. Don't sue us. 2. Ignore any problems that you run into. 3. Love the company! Buy our merch today!"
+                "You skim over the rules with great diligence. In a strange place like this, they might help keep you safe."
+                "...Wait, you're not getting paid for this?"
+                "On second thought, you think that you'll do as you please."
                 $ poster1_interact = True
                 jump poster_interact
             "Examine Poster 2" if not poster2_interact:
-                "It's a cat clinging on to some kind of horizontal pole. Text reads 'Hang' in there!' You feel rather inspired."
+                "Hang in there? ...Or face physical and psychological harm?"
+                "What's that supposed to mean? And how could they possibly determine whether you're hanging in there or not?"
+                "You debate drawing a smiley face over your mask."
                 $ poster2_interact = True
                 jump poster_interact
             "Examine Poster 3" if not poster3_interact:
-                "It's some strange man posed in the darkness with bold red text on the bottom of the poster reading 'YOUR SUPERIORS ARE WATCHING.'"
-                "..It's kind of tacky."
+                "It'd be inspiring if the subject in the image didn't look like he was on his deathbed, but at least they're honest."
+                "You really hope that you signed on as a scientist and not a subject, but you can't remember."
+                "....Is any of this even legal?"
                 $ poster3_interact = True
                 jump poster_interact
             "Return":
+                scene lobby
                 jump choiceLoopLobby
 
     label before_hallways:
@@ -794,28 +852,43 @@ label start:
     label anomaly1_alone:
         scene anomalyfake
         "You enter the cell. There's a person standing ahead of you with a small smile on their face."
-        anomaly1 "Hello there. You ... are alone?"
+        "How long have they just been... waiting there and staring at the door?"
+        anomaly1 "Hello there. You are alone, aren't you?"
         menu alone:
             "Yes":
                 pov "That's right."
-                "..."
-                "Oh, how lovely... and you're not a researcher, are you? Your face isn't registered as one."
-                "Well, you must have come here alone for a good reason, right?"
-                "What do you need from me, [povname]?"
+                anomaly1 "Fascinating. You are not a scientist that I recognize, either. Yet, you are dressed like one."
+                anomaly1 "You must be new, then.... and exploring by yourself?"
+                anomaly1 "There's a thin line between recklessness and bravery, my friend! Where do you think you fall?"
+                anomaly1 "OH, oh, oh! But let's get to the important stuff! We don't have much time before someone notices you're here, do we?"
+                anomaly1 "What do you need from me, [povname]?"
                 menu reason1:
                     "What do you need?"
 
-                    "Make me strong":
-                        "..."
+                    "Help me escape":
+                        anomaly1 "What makes you think a prisoner knows anything about that, friend?"
+                        anomaly1 "Ahahaha, ok, but, maybe I do know a few things."
+                        anomaly1 "But first..."
+                        "The stranger's form begins to shift before your eyes as the lights flicker in and out..!" with vpunch
+                        jump anomaly_passive
                     "I don't need anything from you":
-                        "...."
+                        anomaly1 "..Ahaha? Then why did you come here?"
+                        anomaly1 "Were you really just curious? Well! Here you are! Are you satisfied with what you found?"
+                        anomaly1 "Had a good marvel at the cage that they stuck me in? Is it everything that you were expecting?"
                     "I thought this was the bathroom":
-                        "..."
+                        anomaly1 "You are mistaken, you silly little thing."
+                        anomaly1 "You are in my containment unit. And you are all alone."
+                        anomaly1 "And I... actually need something from you."
+                "The lights flicker as the person in front of you begins to change shape-- morphing into something completely unrecognizable"
+                anomaly1 "I need to take your form. When I have it, I can walk out of here as you."
+                anomaly1 "So, please, be a good friend to me and stay still." with vpunch 
+                jump anomalyfight_alone
+
             "No":
                 pov "No, I'm not."
                 "..."
                 "I see! Thank you for being honest with me."
-                "So, what are you doing here? Anomalies are dangerous, don't you know that?"
+                "So, what are you doing here? Anomalies are dangerous, don't you know that? Even if you're in company."
                 menu reason2:
                     set menuset
                     "Why are you here?"
@@ -829,13 +902,17 @@ label start:
                         anomaly1 "So you put yourself in a cell?"
                         "The static rumbles rythically, as though it is laughing."
                         anomaly1 "I jest! You want my help, don't you?"
-                        anomaly1 "I can do just that! But you need to help me too."
+                        anomaly1 "I can do just that! But first, you need to prove that you can be of use."
                         anomaly1 "{bt=5}It's only fair!{/bt}"
+                        jump anomaly_passive
                     "I chose to be here":
                         anomaly1 "You... did? That's pretty stupid."
                         anomaly1 "You must want something out of this place? What is it? Power? Knowledge? Helping others?"
                         anomaly1 "Whatever it is... I think you're in over your head, buddy."
                         anomaly1 "But, hey. I just love the crazy dreamer type! if you're here to ask for my help, I'll see what I can do."
+                        anomaly1 "Just, do something for me first, okay?"
+                        "The stranger's form begins to shift before your eyes."
+                        jump anomaly_passive
                     "I'm just curious":
                         anomaly1 "Yeah? You out on a little tour with whoever you're with?"
                         anomaly1 "I hope you're enjoying the view, sicko."
@@ -843,6 +920,7 @@ label start:
                         anomaly1 "How interesting. But, you should know, you're on a leash as long as your need a guide."
                         anomaly1 "Real exploration begs that you unbind your chains and go free, living in the thrill of danger."
                         anomaly1 "Let me help you cut those chains, buddy. As a favor~"
+                        "The stranger's form begins to shift right before your eyes."
         jump anomalyfight_alone
 
     label anomaly1:
@@ -861,7 +939,6 @@ label start:
                 sol "You only need to gather some research on this anomaly- it's a new one, so! we.. don't have much yet."
                 sol "Try asking it some questions. I think that's always a good way to learn more."
                 show sol nervous
-                "..."
                 "Ok, yes, I know it's a TV and can't talk back, but you never know...!"
                 jump anomaly1q
             "What does this anomaly do?":
@@ -908,13 +985,14 @@ label start:
                         "You grab onto the TV's knob and twist it all the way around until you hear a Click!"
                         "Channel 9999. A recording begins to play. You hear an unknown voice speak through a muffled microphone."
                         "{sc=10}LOOP 10: The day went as it always does. Continued efforts to prevent the loop have fail--{/sc}" 
-                        "The channel cuts out, and the tv begins to shake!" with vpunch
+                        "The channel cuts out, and the tv begins to shake! Wires slither out of it like snakes and its entire form begins to reconstruct itself." with vpunch
                     "Do not":
                         pov "No thanks."
                         "You step away from the anomaly and start to walk away."
-                        "Static roars from the screen behind you! Something is happening!"
-                        jump quicktimemini
-                "The door is flung open as your guide runs to protect you."
+                        "Static roars from the screen behind you. You feel something whizz past the side of your face."
+                        "When you turn to look, you see a wire mere inches away from you that has come from the TV and embedded itself into the wall."
+                        "There's no running from this."
+                "The door is flung open as [sol] runs to protect you."
                 jump anomalyfight
 
             "What do I get out of this?":
@@ -923,13 +1001,6 @@ label start:
                 anomaly1 "No? Is my information that outdated..? Let me bring you a new reason, then."
                 anomaly1 "I can get both of us out of here. You can go back to your own life."
                 anomaly1 "{sc=2}Hell, I can even bring what you're missing back.{/sc}"
-                label rizz:
-                    menu:
-                        "rizz him up?"
-
-                        "hey, baby, are you a power source, cause you've got the kinda resistor I wanna deposit my load into ;)":
-                            "..."
-                            jump anomaly1_fight
                 jump anomaly1Plea
     label anomalyfight_alone:
         play music electric_chair loop
@@ -1257,62 +1328,6 @@ label start:
             scene anomaly2
             play music get_up loop
             "You've lost."
-    #i want to add a quicktime event. not sure where yet
-    # at this point in time, this label is unreachable/uselss in game.
-    # future me here
-    # found a use for this code for the other quick time event thing i went with
-    # it'll be a part of the minigame for the pacifist route
-    '''
-    label quicktime:
-
-        label qtmenu:
-            $ time = 3
-            $ timer_range = 3
-            $ timer_jump = 'quicktimefail1'
-            show screen countdown
-            
-            menu:
-                "...":
-                    "..."
-                    hide screen countdown
-                    # jump (insert something here)
-    label quicktimefail1:
-        scene anomaly1
-        "..."
-    '''
-
-    label quicktimemini:
-        scene anomaly_qte1
-        if miss1 == True:
-            scene anomalyqte2
-        if miss2 == True:
-            scene anomalyqte3
-        $ cont = 0 #continue variable
-        $ arr_keys = ["q","w","e","r"] # list of keyboard inputs to select from
-
-        call qte_setup(0.8, 0.8, 0.01, renpy.random.choice(arr_keys), renpy.random.randint(1, 9) * 0.1, renpy.random.randint(1, 9) * 0.1)
-        #calls qte setup
-        #key is randomly selected, then random position is selected
-
-        while miss3 == False and counter < 10:
-            call qte_setup(0.8, 0.8, 0.01, renpy.random.choice(arr_keys), renpy.random.randint(1, 9)* 0.1, renpy.random.randint(1,9) * 0.1)
-            $ counter = counter + 1
-            # repeat until ya miss one
-        if miss3 == False:
-            if rprogression1:
-                jump progression1
-            elif rprogression2:
-                jump progression2
-            elif rprogression3:
-                jump progression3
-            elif rprogression4:
-                jump progression4
-            elif rprogression5:
-                jump progression5
-            else:
-                jump anomaly_passive
-        elif miss3:
-            jump combat_lose
     
     # this label will be jumping a lot between itself and quicktimemini depending on how many times the player messes up
     # i think i'll add some progression variables so it knows where to jump back
@@ -1334,6 +1349,10 @@ label start:
             $ time = 3
             $ timer_range = 3
             $ timer_jump = 'quicktimemini'
+            $ counter = 0
+            $ miss1 = False
+            $miss2 = False
+            $miss3 = False
 
             "The story begins in a snowy winterland, carefully crafted, of pristine design; a flowery decoration of the labyrinth that a woman had found herself in."
             "Among the pretty lies, shallow beauty, and death that flowed from the glistening snow,"
@@ -1343,6 +1362,7 @@ label start:
                 "Disgusted":
                     hide screen countdown
                     $ rprogression1 = True
+                    $ rprogression2 = True
                     $ counter = 0
                     $ miss1 = False
                     $miss2 = False
@@ -1352,9 +1372,10 @@ label start:
                     hide screen countdown
                     $ counter = 0
                     $ miss1 = False
-                    $miss2 = False
-                    $miss3 = False
+                    $ miss2 = False
+                    $ miss3 = False
                     "Wrong."
+                    $ rprogression1 = True
                     jump quicktimemini
                 "Glad":
                     $ counter = 0
@@ -1363,10 +1384,15 @@ label start:
                     $miss3 = False
                     hide screen countdown
                     "Wrong." 
+                    $ rprogression1 = True
                     jump quicktimemini
 
 
         label progression2:
+            $ counter = 0
+            $ miss1 = False
+            $miss2 = False
+            $miss3 = False
             "...Disgusted. She sought to free herself from this maze, whether impossible or not."
             "The woman called out to the white coats and even the gods, and…"
             $ time = 3
@@ -1381,9 +1407,11 @@ label start:
                     $miss3 = False
                     hide screen countdown
                     "Wrong."
+                    $ rprogression2 = True
                     jump quicktimemini
                 "Nobody responded":
                     $ rprogression2 = True
+                    $ rprogression3 = True
                     $ counter = 0
                     $ miss1 = False
                     $miss2 = False
@@ -1397,9 +1425,14 @@ label start:
                     $miss2 = False
                     $miss3 = False
                     "Wrong."
+                    $ rprogression2 = True
                     jump quicktimemini
 
         label progression3:
+            $ counter = 0
+            $ miss1 = False
+            $miss2 = False
+            $miss3 = False
             "...Nobody responded. The sands of time continued their pour, and all remained the same for many years."
             "Searching, searching, and searching, there appeared to be no answer to her call."
             "So, she created her own, and she …."
@@ -1415,6 +1448,7 @@ label start:
                     $miss3 = False
                     hide screen countdown
                     "Wrong."
+                    $ rprogression3 = True
                     jump quicktimemini
                 "Found her new form":
                     $ counter = 0
@@ -1434,6 +1468,10 @@ label start:
                     jump quicktimemini
 
         label progression4:
+            $ counter = 0
+            $ miss1 = False
+            $miss2 = False
+            $miss3 = False
             "...Found new form. It started as metal hands, designed for greater precision even as age tore lines into one’s hands."
             "Then, it was an artificial liver that gave out from years of mistreatment."
             "Then, a metallic shell when age claimed what was left."
@@ -1471,6 +1509,10 @@ label start:
 
 
         label progression5:
+            $ counter = 0
+            $ miss1 = False
+            $miss2 = False
+            $miss3 = False
             "... It was replaced, to perfect it. And, thus she found her perfect form and escaped the bounds of the labyrinth."
             "What was left behind bore no importance, for she had her freedom."
             "But soon enough, claws burrowed their way into her chest once more, and she was thrown into a cell."
@@ -1507,8 +1549,172 @@ label start:
                     jump quicktimemini
     label after_anomaly_passive:
         "Well done."
+    
+    label quicktimemini:
+        scene anomaly_qte1
+        if miss1 == True:
+            scene anomalyqte2
+        if miss2 == True:
+            scene anomalyqte3
+        $ cont = 0 #continue variable
+        $ arr_keys = ["q","w","e","r"] # list of keyboard inputs to select from
+
+        call qte_setup(0.8, 0.8, 0.01, renpy.random.choice(arr_keys), renpy.random.randint(1, 9) * 0.1, renpy.random.randint(1, 9) * 0.1)
+        #calls qte setup
+        #key is randomly selected, then random position is selected
+
+        while miss3 == False and counter < 10:
+            call qte_setup(0.8, 0.8, 0.01, renpy.random.choice(arr_keys), renpy.random.randint(1, 9)* 0.1, renpy.random.randint(1,9) * 0.1)
+            $ counter = counter + 1
+            # repeat until ya miss one
+        if miss3 == False:
+            if rprogression5 and rprogression4 and rprogression3 and rprogression1 and rprogression2:
+                jump progression5
+            elif rprogression4 and rprogression3 and rprogression1 and rprogression2:
+                jump progression4
+            elif rprogression3 and rprogression1 and rprogression2:
+                jump progression3    
+            elif rprogression2 and rprogression1:
+                jump progression2
+            elif rprogression1:
+                jump progression1
+            else:
+                jump anomaly_passive
+        elif miss3:
+            jump combat_lose
+    
+
+    label combat_win_alone:
+        scene anomaly_defeat
+        "You watch as your enemy crumples to the ground. His wires are sparking, and he cranes his head up to meet your cold gaze."
+        "His form twitches on its last power reserves, and his screen cuts in and out of oblivion. Any minute now, and he'll be gone."
+        anomaly1 "How- How s---trong yo-u-- are. C--Com--e find me a--gain s--oon."
+        anomaly1 "Ju--st- r--re-rememb--e-r to tur--n right three times, then le--f-t once when y--ou find you-rsel-f alone in the breaker room."
+        anomaly1 "G--oodbye, doll."
+        scene anomaly_defeat2
+        "His head falls flat onto the ground with a thud. Numerous slices in his wiring tell you that he may never rise again."
+        "So what was that about meeting him later?"
+        "Your thoughts are interrupted when you hear footsteps speed down the hallway outside."
+        "The door is flung open before you can react, and the man that you met earlier stands there. His gaze flicks from you to the anomaly."
+        show sol surprised 
+        sol "....What...? What did you..?"
+        sol "Ah, nevermind that- for now, anyway- You're hurt! It's a good thing that I brought this.."
+        "[sol] approaches you, medkit in hand, with a look of worry on his face."
+        show sol neutral
+        sol "Can you take a seat for me? By the wall should be fine."
+        menu help:
+
+            "Accept his help":
+
+                "You nod your head and sit down by the wall. Sol crouches next to you and opens up the medkit."
+                "He begins applying basic first aid to your wounds. It's a bit ameaturish, but it's enough to stop the bleeding."
+                sol "I actually.. wanted to talk to you about something. Which- Which is why we're not going to the medbay right now..."
+                sol "Did.. did you steal my keycard?"
+
+                menu didyou:
+
+                    "Yes":
+
+                        pov "Yes, I did."
+                        sol "...Oh. I- I figured... Haha, I mean! How else would you get in here?!"
+                        sol "(I'm so incompetent...)"
+                        sol "Look, I... I get it. You don't know what's happening. You don't know where you are. You're scared."
+
+                        if tried_leaving:
+                            sol "You want out. I mean- You even tried leaving earlier--"
+                            if kicked_chairs:
+                                sol "And.. kicked down the chairs..."
+                        else:
+                            sol "You want to get out of here. You want to know.. well, what's going on!"
+
+                        sol "And.. It's my fault for being so naive and... reckless. I should've kept a better eye on that card.."
+                        sol "I promise that from now on I'll fill you in on whatever you want to know... "
+                        sol "And you can even come along with me when I ask about getting you out of here, OK?"
+                        sol "In..In fact...! Let's have a Q&A right now! Yeah, right now!"
+                        show sol happy
+                        sol "Come on, hit me with your questions.... after you give me my keycard, please?"
+                        "You have no choice but to give him back his keycard."
+                        sol "All right, then here we go!"
+                        menu qna:
+                            "What do you want to know?"
+
+                            "How did I get here?":
+                                sol "Well, assuming you signed up for a job here..."
+                                sol ""
+
+                            "What is this place?":
+                                ""
+
+                            "What are anomalies?":
+                                ""
+
+                            "Why do you work here?":
+                                ""
+
+                            "No more questions":
+                                ""
 
 
+                    "No":
+                        pov "No, I didn't."
+                        sol "....Okay."
+                        "He sighs deeply and tucks his hands into his pockets with a distant look on his face."
+                        sol "I know that you got in here somehow, and it's probably because of my own negligence, I'm sorry."
+                        sol "You shouldn't be around dangerous anomalies. I should have been more vigilant. Still..."
+                        sol "I'm impressed you took it down. Not anyone can do that, you know...! (I couldn't, at least.)"
+                        "He finishes wrapping your wounds in bandages."
+                        sol "... Well, I guess that I'm done with your wounds."
+                        sol "Let's go to the medical bay now, okay?"
+                        "He stands up and helps you up as well. [sol] offers you a light smile and starts walking off."
+                        sol "This way!!"
+                        "As he disappears behind a door, you are left alone for a few moments."
+                        "You check your pockets for the stolen keycard and find that it is gone."
+                        "That sneaky little...!" with vpunch
+                        "You run after him."
+
+                        jump sourish_ending2
+
+
+
+            "Refuse his help":
+                "You don't budge; you stay exactly where you are."
+                show sol nervous
+                sol "....Or, uhm. Not. That's okay... That's okay!"
+                show sol neutral
+                sol "I'll take you to the medical bay. A real medic can take care of your wounds there. But, first..."
+                "He stares at you with an unreadable expression. He opens and closes his mouth a few times, then just sighs."
+                sol "Just give me my keycard, okay? The medics might find it when fixing you up."
+                menu giveitback:
+                    "Return the keycard":
+                        "You give the keycard to him. He nods his head slightly and motions for you to follow him."
+                        sol "Thank you. Come with me."
+                        "He walks off, and you follow him in silence. There's nothing to say."
+                        jump sour_ending1
+                    "Keep the keycard":
+                        "Once again, you refuse to budge. You just stare back at him."
+                        sol "...Ok."
+                        "He snatches the keycard from you and turns around, walking towards the exit without checking to see if you are following."
+                        "He stops by the door and looks over his shoulder at you."
+                        sol "I get it, you know. I do."
+                        show sol sad
+                        sol "I'll ask someone else to take over from here on out. You can have a different, more experienced, researcher oversee you."
+                        sol "I'm sorry for screwing this up."
+                        "He turns the corner, out of sight."
+                        hide sol sad
+                        "He leaves. You stand there a moment longer, then walk after him."
+                        jump sour_ending2
+    label sour_ending1:
+        "..."
+    label sour_ending2:
+        "..."
+    label sourish_ending1:
+        "..."
+    label sourish_ending2:
+        "..."
+    label neutral_ending:
+        "..."
+    label good_ending:
+        "..."
     # self explanatory
     # creates the hp bars for the 2v1 combat fight
     screen hp_bars2v1:
