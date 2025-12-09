@@ -61,6 +61,8 @@ default defend = False
 default player_current = 0
 default enemy_chosen = 0
 default i = 0
+default fight_alone = False
+default fight_together = False
 # Filter Events
 default banned = ["fuck","shit","cunt","fucker","pussy","asshole","ass","asshole","fartface","piss",
 "idiot","vag","vagina","penis","faggot", "bitch", "queef","boobs","boob","breast","booby","boobies"]
@@ -72,6 +74,7 @@ default location_learned = False
 default job_learned = False
 default what_areyou = False
 default tried_leaving = False
+default name_given = False
 
 #chair interact events
 default sat_shadowed = False
@@ -99,6 +102,12 @@ default rprogression2 = False
 default rprogression3 = False
 default rprogression4 = False
 default rprogression5 = False
+default passive_alone = False
+
+# gameover/death events
+default died_before = False
+default sol_downed = False
+default researcher_downed = False
 
 # Animations
 image sol idle:
@@ -367,7 +376,7 @@ label start:
     "Your name is ****. You worked at **** ****** for three years until the sudden passing of *****."
     "You were aimless until you were contacted by *****. A job opportunity that would change your life, he told you."
     "You accepted because you had nothing to lose. And then everything went black."
-    scene researcher_intro2 with fade
+    scene researcher_intro2 with dissolve
     "And now...."
 label afterstart:
 
@@ -392,17 +401,21 @@ label afterstart:
         "Where should you go first?"
 
         "the plant":
-            scene plantus_scene_bg
+            scene plantus_scene_bg with fade
             jump plant
+            with fade
         "The Front Desk":
-            scene desk_bg
+            scene desk_bg with fade
             jump front_desk
+            with fade
         "The Chairs":
+            scene chair_bg with fade
             jump chairs
         "The Posters":
-            scene posters_scene_bg
+            scene posters_scene_bg with fade
             jump posters
         "The Door":
+            scene door_bg with fade
             jump door
     
     label plant:
@@ -547,8 +560,12 @@ label afterstart:
                     $ stole_bell = True
                     jump desk_interact
                 else:
-                    show sol nervous
-                    sol "....(I really hope you're not our new hire..)"
+                    if name_given:
+                        show sol nervous
+                        sol "... (I'm judging you.)"
+                    else:
+                        show sol nervous
+                        sol "....(I really hope you're not our new hire..)"
                     hide sol
                     $ stole_bell = True
                     jump desk_interact
@@ -558,6 +575,8 @@ label afterstart:
                 scene lobby
                 jump choiceLoopLobby
     label after_desk_interact:
+        if name_given:
+            jump sol_interact
         show sol neutral
         sol "I assume you are here for the job? Although... I didn't get your name.."
         python:
@@ -648,18 +667,19 @@ label afterstart:
         
         show sol neutral
         sol "Hm, well... Nice to meet you, [povname]."
+        $ name_given = True
 
         menu sol_interact:
             "He taps his fingers on the desk, glancing towards the door."
 
-            "Who are you?":
+            "Who are you?" if name_learned == False:
                 sol "Ah, I forgot to introduce myself! I am Sol, and I am an intern at this place."
                 sol "Usually you'd have someone better showing you around, but.. they're busy right now."
                 show sol happy
                 sol "Maybe you'll meet them later?"
                 $ name_learned = True
                 jump sol_interact
-            "What is this place?":
+            "What is this place?" if location_learned == False:
                 sol "Oh!! Welcome to.... drumroll please... The Facility!"
                 sol "We store all kinds of anomalies here- Uhm, right- anomalies are.. dangerous creatures or objects."
                 show sol surprised
@@ -668,19 +688,19 @@ label afterstart:
                 sol "Anyway, we experiment on said anomalies here so that we can learn more about them- and keep them contained easier."
                 $ location_learned = True
                 jump sol_interact
-            "What job am I here for?":
+            "What job am I here for?" if job_learned == False:
                 sol "I'm surprised that they didn't tell you before... Uhm, well, you're being hired as a researcher!"
                 sol "You'll be experimenting on anomalies, taking observations, and just.. you know, doing paperwork."
                 $ job_learned = True
                 jump sol_interact
-            "What are you?":
+            "What are you?" if what_areyou == False:
                 show sol irritated
                 sol "Rude."
                 show sol happy
                 sol "I'm just messing with you. Though, I am unsure myself... Sorry."
                 $ what_areyou = True
                 jump sol_interact
-            "I'm leaving.":
+            "I'm leaving." if tried_leaving == False:
                 sol "..."
                 show sol nervous
                 sol "Uh- I'm sorry, really sorry, but you... can't leave."
@@ -697,6 +717,8 @@ label afterstart:
             "Return":
                 show sol neutral
                 sol "Oh... Goodbye, then."
+                scene lobby
+                hide sol
                 jump choiceLoopLobby
             "LOOK BEHIND YOU!" if distracted_idea:
                 "You shout and point behind him. He turns his back to you, shocked."
@@ -713,6 +735,7 @@ label afterstart:
                         "You tell him it was just a prank"
                         show sol neutral
                         "...Ah.. Ha, got me good??? I guess."
+                        $ distracted_idea = False
 
                         menu distract:
                             "Distract Him":
@@ -723,6 +746,7 @@ label afterstart:
                                 "He vaults over the desk and books it towards the door."
                                 hide sol
                                 "You walk away."
+                                scene lobby
                                 jump choiceLoopLobby
                             "Return the Keycard":
                                 $ keycard = False
@@ -748,6 +772,7 @@ label afterstart:
                 sol "Ah, sure, sure. Come back here when you're ready."
                 $ ready = True
                 hide sol
+                scene lobby
                 jump choiceLoopLobby
 
     label ash_interact:
@@ -762,7 +787,6 @@ label afterstart:
         scene lobby
         jump sol_interact
     label chairs:
-        scene chair_bg
         "You see three chairs in the corner, ominously placed in a circle."
         menu chair_options:
             "What will you do?"
@@ -853,6 +877,7 @@ label afterstart:
         scene anomalyfake
         "You enter the cell. There's a person standing ahead of you with a small smile on their face."
         "How long have they just been... waiting there and staring at the door?"
+        $ fight_alone = True
         anomaly1 "Hello there. You are alone, aren't you?"
         menu alone:
             "Yes":
@@ -993,6 +1018,7 @@ label afterstart:
                         "When you turn to look, you see a wire mere inches away from you that has come from the TV and embedded itself into the wall."
                         "There's no running from this."
                 "The door is flung open as [sol] runs to protect you."
+                $ fight_together = True
                 jump anomalyfight
 
             "What do I get out of this?":
@@ -1004,7 +1030,7 @@ label afterstart:
                 jump anomaly1Plea
     label anomalyfight_alone:
         play music electric_chair loop
-        show screen hp_bars2v1
+        show screen hp_bars1v1
         scene wall
         show floor
         show wires
@@ -1012,6 +1038,8 @@ label afterstart:
         show researcher idle
         $ player2_max_hp = 30
         $ player2_hp = 30
+        $ enemy_max_hp = 50
+        $ enemy_hp = enemy_max_hp
         camera: 
             perspective True
 
@@ -1074,7 +1102,9 @@ label afterstart:
                 show researcher hurt
                 show anomaly1 attack
                 call anomaly1_fight2
-                $ player2_hp -=d10/2
+
+                $ enemy_attack_value = d10/2
+                $ player2_hp -= enemy_attack_value
                 "Wires lash at your sides."
                 $ defend = False
                 $ i = 0
@@ -1101,8 +1131,10 @@ label afterstart:
                     "STATIC COURSES THROUGH YOUR VEINS."
                     $ i = 0
     if enemy_hp <= 0:
-        jump combat_win
+        hide screen hp_bars1v1
+        jump combat_win_alone
     else:
+        hide hp_bars1v1
         jump combat_lose
 
 
@@ -1115,6 +1147,14 @@ label afterstart:
         show wires
         show anomaly1 idle
         show researcher idle
+
+        $ enemy_max_hp = 50
+        $ enemy_hp = enemy_max_hp
+        $ player2_max_hp = 15
+        $ player2_hp = player2_max_hp
+        $ player_max_hp = 10
+        $ player_hp = player_max_hp
+        
         camera: 
             perspective True
 
@@ -1123,11 +1163,13 @@ label afterstart:
             call dice_roll
             while i < 2:
                 if player2_hp <= 0:
+                    $ researcher_downed = True
                     show researcher_down
                     call researcher_down
                     $ player_current = 1
                     $ i = 1
                 elif player_hp <= 0:
+                    $ sol_downed = True
                     show researcher idle
                     show sol_down
                     call sol_down
@@ -1291,7 +1333,8 @@ label afterstart:
                 show researcher hurt
                 show anomaly1 attack
                 call anomaly1_fight2
-                $ player2_hp -=d10/2
+                $ enemy_attack_value = d10/2
+                $ player2_hp -= enemy_attack_value
                 "Wires lash at your sides."
                 $ defend = False
                 $ i = 0
@@ -1320,20 +1363,50 @@ label afterstart:
     if enemy_hp <= 0:
         label combat_win:
             hide screen hp_bars2v1
-            scene anomaly2
-            "You won..."
+            jump combat_win_together
     else:
         label combat_lose:
             hide screen hp_bars2v1
-            scene anomaly2
+            scene anomaly_qte3
             play music get_up loop
-            "You've lost."
+            "You are yanked into the air by a wire that has constricted itself around you."
+            "The pressure increases, then you hear a SNAP as your ribs begin to give out."
+            "Your vision blurs. It's over. You tried, and yet.. it was not enough."
+            "Then, you see it.. A hand extended to you. It looks so familiar. Almost comforting to see, strangely enough."
+            menu accept:
+                "Do you accept?"
+
+                "Yes":
+                    if died_before:
+                        "You know the deal. You are walked back in time, good as new." with fade
+                    else:
+                        "You take the hand. Time around you screeches to a halt. Then, your body begins to move on its own, as if on puppet strings."
+                        "In fact, everything is being moved as though it's part of a stage act."
+                        "You are yanked and pulled in various directions; forced to repeat your previous actions and mistakes until you are back at where you started."
+                        "Then, the strings fall slack. You're able to free move again, and you feel good as new." with fade
+                    if fight_alone:
+                        $ died_before = True
+                        jump anomalyfight_alone
+                    elif fight_together:
+                        $ died_before = True
+                        jump anomalyfight
+                    elif passive_alone:
+                        $ died_before = True
+                        jump anomaly_passive
+                "No":
+                    "You decide not to reach for the hand. Your lungs burn. Your heart pounds. You find yourself fading faster and faster."
+                    "Through blurred vision and tears, you see a poor imitation of you in place of the anomaly you were fighting."
+                    "Glancing down at yourself, you realize that your appearance now resembles the anomaly."
+                    "You're too tired to make any sense of this. With a final wheezing breath, you find that your heart stops beating."
+                    "You die."
+                    jump killed_ending
     
     # this label will be jumping a lot between itself and quicktimemini depending on how many times the player messes up
     # i think i'll add some progression variables so it knows where to jump back
     # the player having their progress constantly reset would break immersion and make them angry methinks
     label anomaly_passive:
         scene anomaly_qte1
+        $ passive_alone = True
 
         "Prove your worth to me."
         "I will tell you a story. You must fill in the blanks when I trail off."
@@ -1548,7 +1621,27 @@ label afterstart:
                     "Wrong."
                     jump quicktimemini
     label after_anomaly_passive:
-        "Well done."
+        scene anomaly_qte1
+        anomaly1 "Well done. You did better than I expected you to."
+        anomaly1 "I suppose you have passed my test then. You are worthy, after all."
+        anomaly1 "Getting you out of here will not be an easy process, but you will have my support from here on out."
+        anomaly1 "You see, it's quite easy to get you out, but I suppose we want it so that you will not have to live life on the run, yes?"
+        anomaly1 "To avoid people being sent after you, we will have to turn to drastic measures. Do you understand where I am going with this?"
+        anomaly1 "We must take the facility down entirely."
+        anomaly1 "I see the way that you're looking at me. You have a right to be nervous. However, know that we will not be alone."
+        anoamly1 "I am certain you can persuade more anomalies to your side. Get enough, and you'll have your own army."
+        anomaly1 "Perhaps you are still not convinced. That is fine. Give it some thought before you make a decision you can't take back."
+        anomaly1 "I'll be going now. We have a visitor, after all. I'll find you again soon."
+        "The anomaly before you suddenly crumples to the floor, limp, all the power from its body suddenly drained."
+        scene anomaly_defeat2
+        "The door is flung open as [sol] runs into the room."
+        sol "Are you okay?! I saw you were talking to that thing, and-"
+        "He looks towards the crumbled body at the other end of the room."
+        sol "and-...It's... dealt with?... OK."
+        sol "Well, let's get out of here. I don't know how you were able to access an anomaly this dangerous, but.."
+        sol "It doesn't matter now, I suppose. Let's get you to the medbay just incase."
+        ""
+
     
     label quicktimemini:
         scene anomaly_qte1
@@ -1583,6 +1676,56 @@ label afterstart:
         elif miss3:
             jump combat_lose
     
+
+
+    label combat_win_together:
+        scene anomaly_defeat
+        "You and [sol] watch as your opponent crumples to the ground, wires sparking and screen flickering."
+        "It tilts its head towards you, and you can feel its gaze pierce through your very being."
+        "There's a cackle of static, then its screen turns off and its head hits the floor."
+        scene anomaly_defeat2
+        if sol_downed:
+            "You flip your knife in your hands, then stuff it back in your pocket. You survived, for now."
+            "Looking around, you spot Sol in rather poor condition. He's laying on the floor with far too much blood gathered in a puddle around him."
+            menu sol_downed_interact:
+                "Help him":
+                    "You walk over to him and kneel beside him. He lifts his head up to look at you."
+                    "You offer a hand to him, which he reluctantly accepts. Together, you both rise to a stand."
+                    sol "Thank you..."
+                    "He murmurs, then looks down at the floor."
+                    sol "I- I'm so sorry. I thought.. I don't know what I thought. This was supposed to be safe..."
+                    sol "...I was wrong. Obviously... If- If you want to be assigned to someone else, I get it."
+                    sol "I'll just take you to the medbay now, okay? I think it's that way."
+                    "He doesn't give you a chance to respond. He stumbles off towards the door and you are left no choice but to follow him."
+                    jump good_ending
+                "Leave him":
+                    "You look away and start walking towards the door. He got you both into this situation; he can get himself out."
+                    "You don't hear him move to stop you or even call out for you as you leave, and the door clicks shut behind you."
+                    jump neutral_ending2
+                "I thought you were stronger":
+                    "You walk over and crouch beside him. Staring down at him, you speak your mind."
+                    pov "I thought you were stronger."
+                    "He was supposed to keep you safe around here, wasn't he? He must suck at his job. Not to mention that he got you into this mess."
+                    sol "{sc=0.5}...I'm sorry.{/sc}"
+                    "[sol] lifts his head up to look at you, breathing ragged. He tries to push himself up to a sitting position, but fails."
+                    "He shakes his head, then forces himself to stand."
+                    sol "I'm sorry. I will be stronger. I promise you that this won't happen again... I am, sorry for a lot."
+                    pov "Make good on that."
+                    "With a sigh, you turn around and start walking towards the door. You've got to see to your own wounds."
+                    sol "I'll- I'll show you where the medbay is."
+                    "He trails behind you as the both of you enter the hallways."
+                    jump neutral_ending
+
+        elif researcher_downed:
+            "You kneel on the floor, breathing hard. Warm blood oozes from your wounds and stains your clothes."
+            "[sol] approaches you and helps you up with a worried frown. Your arm is wrapped around his shoulder for support."
+            show sol happy
+            sol "I'm-- I'm so sorry. This wasn't supposed to happen-- I didn't know that this could happen."
+            sol "We need to take you to the medical bay right now! I'll look into what went wrong here, ok? I'll- I'm going to try to make this right."
+            "He supports you the best that he can as the both of you hurriedly walk out of the room and out into the hallways."
+            jump good_ending2
+            
+        
 
     label combat_win_alone:
         scene anomaly_defeat
@@ -1637,23 +1780,90 @@ label afterstart:
                         sol "All right, then here we go!"
                         menu qna:
                             "What do you want to know?"
+                            set menuset
 
                             "How did I get here?":
                                 sol "Well, assuming you signed up for a job here..."
-                                sol ""
+                                sol "The process tends to be a litte.. how do I put this.. unorthodox?"
+                                show sol nervous
+                                sol "It'd be REALLY bad if the public found out a whole lot about what this place does- Oh that sounds wrong."
+                                sol "What I mean is..! The facility operates in secrecy for the safety of everyone. If people knew about it.."
+                                sol "They might freak out or try breaking in or... just causing a lot of problems, I think."
+                                sol "So, uhm. You were probably transported here in secret. Sorry about that. Thought the sign on paper explained that.."
+                                sol "Ah, but, I remember now. You did sign up for the amnesia procedure. A good chunk of your memories might be missing.."
+                                show sol happy
+                                sol "Errrr...I hope that answers your question!"
+                                show sol nervous
+                                sol "(Don't look at me like that..! I'm not allowed to answer any questions about what you forgot.. not that I know, anyway.)"
+                                jump qna
 
                             "What is this place?":
-                                ""
+                                if location_learned:
+                                    sol "As I've told you before, this is the facility."
+                                show sol neutral
+                                sol "This place is a secret organization that contains and does research on anomalies."
+                                sol "We ALSO capture them if they are reported out in the wild. It happens more often than you think..!"
+                                sol "I'm sure you've heard of the number 9999? It's taught alongisde 911, I think. Well, that's us! ..9999, not 911."
+                                show sol nervous 
+                                sol "I guess I should also mention that we use them to capture other anomalies."
+                                show sol neutral
+                                sol "Not all anomalies are like the one you just fought. Some are inanimate, or.. entire areas!"
+                                sol "(I'm not even sure some of those are properly contained..! The hallway kept looping on me once..)"
+                                sol "Either way, those type of anomalies are very... useful. Maybe you'll get your hands on your own someday!"
+                                sol "One last thing: This place is divided up into multiple floors. There's about... 5 floors above, and er.. I lost count of the lower floors."
+                                sol "I wouldn't reccomend going to the upper or lower floors without someone else."
+                                sol "The further away you get from the lobby, the more dangerous the anomalies become."
+                                show sol happy
+                                sol "We also have a whole classification system! But I'll tell you that another time if you're interested, OK?"
+                                jump qna
 
                             "What are anomalies?":
-                                ""
+                                show sol neutral
+                                sol "... Interesting question. Let me think."
+                                show sol nervous
+                                sol "OKAY! I've got it. So, I, uhm, didn't actually pay all that much attention when it was explained to me..!"
+                                show sol neutral
+                                sol "But from what I remember? They are creatures that.. we don't know WHERE they came from.. but they have dangerous abilities,"
+                                sol "and most of them are capable of warping reality. I think that's what happened here with this anomaly... because I don't think it usually looks like that?"
+                                "He looks over his shoulder at the corpse of the anomaly laying on the floor."
+                                sol "I'm surprised this whole area didn't change.. usually the whole place becomes unrecognizable, so...!"
+                                sol "I guess the security measures are working??? We have some in place to limit the abilities of anomalies."
+                                sol "If you're really interested in this stuff, maybe I'll take you to the room where we keep the files on anomalies later!"
+                                show sol happy
+                                sol "Just let me know, ok?"
+                                jump qna
 
                             "Why do you work here?":
-                                ""
+                                sol "Oh... Well, er... You see..."
+                                show sol nervous
+                                sol "It's like home for me... after.. everything."
+                                sol "But, er, if home were 100x better. And life threatening. It's... terrifying. But exciting!"
+                                show sol happy
+                                sol "(Ha, and he wouldn't let anything happen to me!!! ever!)"
+                                sol "(... what a waste of his effort.)"
+                                jump qna
+
 
                             "No more questions":
-                                ""
-
+                                show sol happy
+                                sol "All right then! QnA is officially over! I hope that you can trust me a little more now."
+                                "He puts his items back into the medkit. Your wound looks decently bandaged up now, and you feel a little better."
+                                sol "Follow me. We'll go to the medbay now to make sure you'll be okay."
+                                "He motions for you to follow and walks out the door."
+                                "You stand there in silence a moment, just staring at your bandages."
+                                "You. . ."
+                                menu trust:
+                                    "Do you trust him?"
+                                    "Yes":
+                                        "You trust him."
+                                        "You may not know him well, but he seems to have good intent."
+                                        "You follow him out the door to the hallway."
+                                        jump sourish_ending1
+                                    "No":
+                                        "You don't trust him. You barely even know him."
+                                        "Either way, you need to get seen to, you suppose."
+                                        "You follow him out the door to the hallway."
+                                        jump sourish_ending1
 
                     "No":
                         pov "No, I didn't."
@@ -1704,17 +1914,32 @@ label afterstart:
                         "He leaves. You stand there a moment longer, then walk after him."
                         jump sour_ending2
     label sour_ending1:
+        scene sour_end1
         "..."
+        return
     label sour_ending2:
+        scene sour_end2
         "..."
+        return
     label sourish_ending1:
         "..."
+        return
     label sourish_ending2:
         "..."
+        return
     label neutral_ending:
         "..."
+    label neutral_ending2:
+        "..."
+        return
     label good_ending:
         "..."
+    label good_ending2:
+        "..."
+        return
+    label killed_ending:
+        "..."
+        return
     # self explanatory
     # creates the hp bars for the 2v1 combat fight
     screen hp_bars2v1:
