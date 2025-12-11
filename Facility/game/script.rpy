@@ -30,6 +30,14 @@ define pov = Character("[povname]")
 define anomaly1 = Character("???")
 define ash = Character("Ash Dweller")
 
+# timeless events
+default timeless_notice = 0
+init python:
+
+    class timeless(NoRollback):
+        def __init__(self):
+            self.value = 0
+
 # event variables
 default menuset = set()
 #Plant events
@@ -108,6 +116,12 @@ default passive_alone = False
 default died_before = False
 default sol_downed = False
 default researcher_downed = False
+
+#hallway envents
+default h0 = False
+default h1 = False
+default h2 = False
+default h_count = 0
 
 # Animations
 image sol idle:
@@ -386,6 +400,9 @@ label afterstart:
 
     scene lobby
     with fade
+    if distracted:
+        scene lobby_distracted
+        #placeholder
     play music lounge loop
 
     # This shows a character sprite. A placeholder is used, but you can
@@ -760,6 +777,7 @@ label afterstart:
                         "You tell him it was just a prank."
                         show sol neutral
                         "...Ah.. Ha, got me good??? I guess."
+                        $ distracted_idea = False
                         jump sol_interact
         sol "Now, we should begin testing."
         menu proceed1:
@@ -867,17 +885,59 @@ label afterstart:
         jump anomaly1
     
     label hallways2:
+        $ timeless_notice = timeless()
         scene hallways
         play music something_is_wrong loop
         "You enter the hallways alone."
         "It's rather dark (and maybe a little intimidating), but you'll manage. You have a keycard, after all."
+        "You start down the hallway, and you..."
+        menu hallway_choice:
+            "Continue":
+                "You ignore the door to your left and continue down the hallway."
+                "It's almost endless, and everything just looks the same beside the markers denoting the anomaly contained within each cell."
+                "It's strangely empty for a so called shadow organization. Shouldn't security and faculty be flowing through this place?"
+                "....Why has [sol] been the only one you've run into so far?"
+                "It's strange, but not your first priority right now. You need to find the exit."
+                $ h0 = True
+                menu hallway_choice2:
+                    "Continue" if h0:
+                        "Footsteps echoing throughout the halls, you press on. You've got to reach an elevator, or even a crossroads eventually."
+                        $ h0 = False
+                        $ h1 = True
+                        jump hallway_choice2
+                    "Continue" if h1:
+                        "You continue on... and on... and on. It's all. Just. The. Same. How many times have you passed that SAFE sign by now?"
+                        "Where is the next area?"
+                        $ h1 = False
+                        $ h2 = True
+                        jump hallway_choice2
+                    "Continue" if h2:
+                        "You continue on."
+                        $ h_count += 1
+                        if timeless_notice.value > 0:
+                            jump timeless_encounter
+                        elif h_count >= 10:
+                            jump hallway_ending
+                        else:
+                            jump hallway_choice2
+
+                    "Turn back":
+                        "You decide that you've had enough of this and decide to turn back."
+                        "However, when you turn around, you realize that you are in the same place that you started."
+                        "As you try to make sense of this, you notice a small, aged note in your hands that wasn't there before."
+                        "It reads: 'don't go. bad idea.'"
+                        "Left with only more questions, you aren't sure what to do."
+                        $ timeless_notice.value += 1
+                        jump hallway_choice
+
+            "Enter the door to your left":
+                "You unlock the door to your left with the keycard. You take a deep breath, then enter the containment cell." with fade
         jump anomaly1_alone
 
     label anomaly1_alone:
         scene anomalyfake
         "You enter the cell. There's a person standing ahead of you with a small smile on their face."
         "How long have they just been... waiting there and staring at the door?"
-        $ fight_alone = True
         anomaly1 "Hello there. You are alone, aren't you?"
         menu alone:
             "Yes":
@@ -901,7 +961,7 @@ label afterstart:
                         anomaly1 "Were you really just curious? Well! Here you are! Are you satisfied with what you found?"
                         anomaly1 "Had a good marvel at the cage that they stuck me in? Is it everything that you were expecting?"
                     "I thought this was the bathroom":
-                        anomaly1 "You are mistaken, you silly little thing."
+                        anomaly1 "You are a rotting liar, you silly little thing."
                         anomaly1 "You are in my containment unit. And you are all alone."
                         anomaly1 "And I... actually need something from you."
                 "The lights flicker as the person in front of you begins to change shape-- morphing into something completely unrecognizable"
@@ -1015,7 +1075,7 @@ label afterstart:
                         pov "No thanks."
                         "You step away from the anomaly and start to walk away."
                         "Static roars from the screen behind you. You feel something whizz past the side of your face."
-                        "When you turn to look, you see a wire mere inches away from you that has come from the TV and embedded itself into the wall."
+                        "When you turn to look, you see a wire mere inches away from your face."
                         "There's no running from this."
                 "The door is flung open as [sol] runs to protect you."
                 $ fight_together = True
@@ -1029,6 +1089,7 @@ label afterstart:
                 anomaly1 "{sc=2}Hell, I can even bring what you're missing back.{/sc}"
                 jump anomaly1Plea
     label anomalyfight_alone:
+        $ fight_alone = True
         play music electric_chair loop
         show screen hp_bars1v1
         scene wall
@@ -1142,11 +1203,11 @@ label afterstart:
         play music electric_chair loop
         show screen hp_bars2v1
         scene wall
-        show floor
-        show sol idle
-        show wires
-        show anomaly1 idle
-        show researcher idle
+        show floor 
+        show sol idle 
+        show wires 
+        show anomaly1 idle 
+        show researcher idle 
 
         $ enemy_max_hp = 50
         $ enemy_hp = enemy_max_hp
@@ -1299,7 +1360,7 @@ label afterstart:
             if enemy_chosen == 1 and defend:
                 show sol hurt
                 show anomaly1 attack
-                call anomaly1_fight
+                call anomaly1_fight 
                 $ enemy_attack_value = d10/2
                 $ player_hp -= enemy_attack_value
                 "Wires slash and hack at your sides."
@@ -1367,7 +1428,7 @@ label afterstart:
     else:
         label combat_lose:
             hide screen hp_bars2v1
-            scene anomaly_qte3
+            scene anomaly_qte3 with fade
             play music get_up loop
             "You are yanked into the air by a wire that has constricted itself around you."
             "The pressure increases, then you hear a SNAP as your ribs begin to give out."
@@ -1637,10 +1698,12 @@ label afterstart:
         "The door is flung open as [sol] runs into the room."
         sol "Are you okay?! I saw you were talking to that thing, and-"
         "He looks towards the crumbled body at the other end of the room."
-        sol "and-...It's... dealt with?... OK."
+        sol "and-...It's... dealt with?... OK then..."
         sol "Well, let's get out of here. I don't know how you were able to access an anomaly this dangerous, but.."
         sol "It doesn't matter now, I suppose. Let's get you to the medbay just incase."
-        ""
+        "He takes you by the shoulder and leads you away towards the hallways."
+        "The door clicks shut behind you."
+        jump anomaly_ending
 
     
     label quicktimemini:
@@ -1916,30 +1979,67 @@ label afterstart:
     label sour_ending1:
         scene sour_end1
         "..."
+
         return
+
     label sour_ending2:
         scene sour_end2
         "..."
+
         return
+
     label sourish_ending1:
         "..."
+
         return
+
     label sourish_ending2:
         "..."
+
         return
+
     label neutral_ending:
         "..."
+
+        return
+
     label neutral_ending2:
         "..."
+
         return
+
     label good_ending:
         "..."
+
+        return
+
     label good_ending2:
         "..."
+
         return
+
     label killed_ending:
         "..."
+
         return
+
+    label anomaly_ending:
+        "..."
+
+        return
+
+
+    label hallway_ending:
+        "..."
+
+        return
+
+    label timeless_encounter:
+        "..."
+
+        return 
+
+
     # self explanatory
     # creates the hp bars for the 2v1 combat fight
     screen hp_bars2v1:
